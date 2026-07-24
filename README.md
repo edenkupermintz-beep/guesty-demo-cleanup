@@ -1,5 +1,8 @@
 # guesty-demo-cleanup
 
+## NOTE: THIS SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN THIS SKILL ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
+
+
 Cursor skill + Open API scripts for **sales-demo Guesty account hygiene**.
 
 Preserve rate plans and core setup. Clean operational clutter: guest names, listing
