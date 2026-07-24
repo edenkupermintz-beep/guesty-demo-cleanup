@@ -1,9 +1,13 @@
-# guesty-folio-delta
+# guesty-demo-cleanup
 
-Cursor agent + CLI tooling for Guesty:
+Cursor skill + Open API scripts for **sales-demo Guesty account hygiene**.
 
-1. **Folio delta (reconcile)** — report differences between a reservation’s guest folio (`money.totalPaid`) and its **Advanced Deposit** ledger. Report only; no writes.
-2. **Demo cleanup** — on-request skill that audits a sales demo account via Guesty MCP and applies Open API cleanup scripts after you confirm. See [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
+Preserve rate plans and core setup. Clean operational clutter: guest names, listing
+**nicknames**, and junk reservations. Inbox wipe is not available via API (report as manual).
+
+Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
+Long-form docs: [`docs/guesty-demo-cleanup.md`](docs/guesty-demo-cleanup.md).
+Agent instructions: [`AGENTS.md`](AGENTS.md).
 
 ## Setup
 
@@ -16,27 +20,9 @@ npm run token -- --write   # curl OAuth → writes GUESTY_ACCESS_TOKEN
 
 `.env` is gitignored. Never commit tokens.
 
-## Folio reconcile
+Prefer the **demo** account credentials so cleanup cannot hit production.
 
-```bash
-npm run reconcile -- --confirmation ABC1234
-npm run reconcile -- --confirmation ABC1234 --json
-npm test
-```
-
-Primary formula:
-
-```
-delta = totalPaid − AD payment credits (trigger=PAYMENT)
-```
-
-Positive delta → guest collected more than AD payment credits  
-Negative delta → AD shows more payment credit than guest `totalPaid`
-
-## Demo cleanup
-
-Recurring sales-demo hygiene (token refresh → guest export → bulk rename → optional
-reservation cancel). Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
+## Workflow
 
 ```bash
 npm run token -- --write
@@ -51,17 +37,34 @@ npm run cleanup:apply -- --plan mutation-plan.json
 npm run cleanup:apply -- --plan mutation-plan.json --apply
 ```
 
-Cleanup never changes listing **titles**, rate plans, or account settings by default.
-Inbox wipe is not available via API (reported as manual). Guest hygiene is **names only**.
-Listing hygiene is **nickname only** (`GueStay - {City}[- {UnitType}]`; unique per Guesty).
+Defaults:
+
+- Guest hygiene = **names only** (`firstName` + `lastName`)
+- Listing hygiene = **nickname only** (`GueStay - {City}[- {UnitType}]`; unique per Guesty)
+- Never change listing **titles**, rate plans, or account settings unless explicitly asked
+- Always dry-run first; never `--apply` without confirmation
 
 ## Project layout
 
-- `src/guesty/` — API client + auth config (+ write client for cleanup)
-- `src/reconcile/` — deterministic folio compare
+- `src/guesty/` — auth config + write client for cleanup
 - `src/cleanup/` — mutation plan apply (dry-run / apply)
-- `src/report/` — human-readable reconcile report
-- `src/cli.ts` — reconcile entrypoint
-- `scripts/cleanup/` — cleanup CLI
-- `AGENTS.md` — reconcile agent instructions
-- `.cursor/skills/guesty-demo-cleanup/` — demo cleanup skill + zero-state policy
+- `scripts/cleanup/` — cleanup CLIs (export, rename guests/nicknames, apply plan)
+- `scripts/get-token.sh` — OAuth token refresh
+- `.cursor/skills/guesty-demo-cleanup/` — Cursor skill + zero-state policy
+- `docs/guesty-demo-cleanup.md` — shareable cleanup runbook
+- `AGENTS.md` — agent instructions for this repo
+
+## Scripts
+
+| Command | Purpose |
+|---------|---------|
+| `npm run token -- --write` | OAuth → `.env` `GUESTY_ACCESS_TOKEN` |
+| `npm run cleanup:export-guests` | Full guest export → `guests-export.json` |
+| `npm run cleanup:rename-guests` | Dry-run guest bulk rename |
+| `npm run cleanup:rename-guests -- --apply` | Apply guest names-only PUTs |
+| `npm run cleanup:rename-listing-nicknames` | Dry-run listing nickname plan |
+| `npm run cleanup:rename-listing-nicknames -- --apply` | Apply nickname-only PUTs |
+| `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
+| `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
+| `npm run next-reservation` | Intake smoke: listing → next reservation |
+| `npm test` / `npm run typecheck` | Unit tests / TypeScript check |

@@ -3,8 +3,6 @@ import "dotenv/config";
 export type GuestyConfig = {
   accessToken: string;
   baseUrl: string;
-  accountingBaseUrl: string;
-  tolerance: number;
   /** True when the bearer was minted from client credentials (not a static env token). */
   tokenFromOAuth: boolean;
 };
@@ -47,10 +45,6 @@ export async function loadConfig(): Promise<GuestyConfig> {
   return {
     accessToken,
     baseUrl,
-    accountingBaseUrl: (
-      process.env.GUESTY_ACCOUNTING_API_BASE_URL ?? `${baseUrl}/accounting-api`
-    ).replace(/\/$/, ""),
-    tolerance: Number(process.env.GUESTY_DELTA_TOLERANCE ?? "0.01"),
     tokenFromOAuth,
   };
 }

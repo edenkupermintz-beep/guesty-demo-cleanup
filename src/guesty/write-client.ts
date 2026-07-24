@@ -11,10 +11,7 @@ export type SanitizeGuestInput = {
   goodToKnowNotes?: string;
 };
 
-/**
- * Write-only Guesty Open API client for demo cleanup.
- * Keep separate from GuestyClient (GET-only reconcile paths).
- */
+/** Write-capable Guesty Open API client for demo account cleanup. */
 export class GuestyWriteClient {
   constructor(private readonly config: GuestyConfig) {}
 

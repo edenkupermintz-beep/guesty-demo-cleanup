@@ -5,10 +5,9 @@ Preserve rate plans and core setup. Clean operational clutter (guest names,
 listing **nicknames**, junk reservations). Report inbox debt that the API cannot wipe.
 
 This document is the shareable version of the Cursor skill at
-`.cursor/skills/guesty-demo-cleanup/` in the `guesty-folio-delta` repo.
+`.cursor/skills/guesty-demo-cleanup/` in the `guesty-demo-cleanup` repo.
 
-**Do not mix with folio reconcile.** Reconcile (`npm run reconcile`) is report-only
-and must never call cleanup writes.
+This repository is **cleanup-only**.
 
 ---
 

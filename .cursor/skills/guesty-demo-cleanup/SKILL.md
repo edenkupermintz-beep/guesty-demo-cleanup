@@ -15,8 +15,7 @@ Periodic / on-request cleanup for a heavily used **sales demo** Guesty account.
 Preserve rate plans and core setup. Clean operational clutter (guest names,
 listing **nicknames**, junk reservations). Report inbox debt that the API cannot wipe.
 
-**Do not mix with folio reconcile.** Reconcile (`npm run reconcile`) is report-only
-and must never call cleanup writes.
+This repository is **cleanup-only**.
 
 ## Prerequisites
 
