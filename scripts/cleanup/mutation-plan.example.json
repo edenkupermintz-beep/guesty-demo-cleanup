@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "createdAt": "example",
+  "mutations": [
+    {
+      "type": "reservation_status",
+      "id": "REPLACE_RESERVATION_ID",
+      "status": "canceled",
+      "confirmationCode": "EXAMPLE",
+      "reason": "Demo clutter — example only"
+    },
+    {
+      "type": "sanitize_guest",
+      "id": "REPLACE_GUEST_ID",
+      "firstName": "Demo",
+      "lastName": "Guest",
+      "clearNotes": true,
+      "clearGoodToKnowNotes": true,
+      "reason": "Junk demo name — example only"
+    }
+  ],
+  "manual": [
+    {
+      "kind": "inbox",
+      "summary": "Archive messy conversations in Guesty UI (no Open API delete)"
+    }
+  ]
+}

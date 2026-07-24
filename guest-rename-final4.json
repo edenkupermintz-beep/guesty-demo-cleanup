@@ -1,0 +1,38 @@
+[
+  {
+    "id": "682e19fdd93fdf80e9eb5003",
+    "after": {
+      "firstName": "Wayne",
+      "lastName": "Reynolds"
+    },
+    "ok": true,
+    "error": null
+  },
+  {
+    "id": "68d251c9acf595674e26effb",
+    "after": {
+      "firstName": "Amy",
+      "lastName": "Gibson"
+    },
+    "ok": true,
+    "error": null
+  },
+  {
+    "id": "69851281275c9202a8a89807",
+    "after": {
+      "firstName": "Raymond",
+      "lastName": "Hunt"
+    },
+    "ok": true,
+    "error": null
+  },
+  {
+    "id": "6790008cc543818f588f4ac5",
+    "after": {
+      "firstName": "Mark",
+      "lastName": "Coleman"
+    },
+    "ok": true,
+    "error": null
+  }
+]

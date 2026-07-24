@@ -1,0 +1,32 @@
+{
+  "name": "guesty-demo-cleanup",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cursor agent that reports deltas between Guesty guest totalPaid and Advanced Deposit folio",
+  "scripts": {
+    "reconcile": "tsx src/cli.ts",
+    "token": "bash scripts/get-token.sh",
+    "next-reservation": "tsx scripts/next-reservation.ts",
+    "cleanup:apply": "tsx scripts/cleanup/apply-plan.ts",
+    "cleanup:export-guests": "tsx scripts/cleanup/export-guests.ts",
+    "cleanup:rename-guests": "tsx scripts/cleanup/bulk-rename-guests.ts",
+    "cleanup:rename-listing-nicknames": "tsx scripts/cleanup/rename-listing-nicknames.ts",
+    "demo:lines": "tsx scripts/demo-line-items.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.30",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0"
+  }
+}

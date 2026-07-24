@@ -1,0 +1,107 @@
+{
+  "version": 3,
+  "description": "Demo account zero state: keep titles/rates/catalog; clean guest names, listing nicknames, and junk reservations.",
+  "neverTouch": [
+    "listingTitles",
+    "ratePlans",
+    "rateStrategies",
+    "owners",
+    "accountingCategories",
+    "paymentProviders",
+    "accountSettings"
+  ],
+  "listings": {
+    "renameNicknames": true,
+    "renameTitles": false,
+    "nicknameFormat": "GueStay - {City}[- {UnitType}]",
+    "sharedNicknameCities": ["Atlanta"],
+    "unitTypes": [
+      "Apartment",
+      "Condo",
+      "Loft",
+      "Penthouse",
+      "Studio",
+      "Suite",
+      "Townhouse",
+      "Villa",
+      "House",
+      "Cottage",
+      "Duplex",
+      "Cabin",
+      "Flat",
+      "Bungalow"
+    ],
+    "maxPreferredPerBaseNickname": 3,
+    "note": "Guesty enforces unique nicknames; script appends ' 2', ' 3', … when needed. Titles are marketing copy — do not change unless user asks."
+  },
+  "reservations": {
+    "allowlistConfirmationCodes": [],
+    "allowlistReservationIds": [],
+    "terminalStatuses": ["canceled", "cancelled", "closed", "declined"],
+    "inquiryStatuses": ["inquiry", "reserved", "awaiting_payment"],
+    "confirmedStatuses": ["confirmed", "checked_in", "checked_out"],
+    "inquiryAction": "closed",
+    "confirmedAction": "canceled",
+    "safeCancelPlatforms": ["manual", "direct"],
+    "skipChannelManaged": true
+  },
+  "guests": {
+    "allowlistGuestIds": [],
+    "defaultMutation": "names_only",
+    "sanitizeFirstName": "Demo",
+    "sanitizeLastNamePrefix": "Guest",
+    "clearNotes": false,
+    "clearGoodToKnowNotes": false,
+    "duplicateFullNameThreshold": 5,
+    "forbiddenNameSubstrings": [
+      "humberto",
+      "rinaldi",
+      "raftree",
+      "remi",
+      "rémi",
+      "cannessant",
+      "dervish",
+      "maloney",
+      "gomel"
+    ],
+    "badNamePatterns": [
+      "test",
+      "asdf",
+      "xxx",
+      "foo",
+      "bar",
+      "qwerty",
+      "n/a",
+      "na",
+      "guest guest",
+      "john doe",
+      "jane doe",
+      "david gomel"
+    ],
+    "groupNameLabels": [
+      "Wedding Party",
+      "Team Trip",
+      "Family Reunion",
+      "Bachelor Party",
+      "Bachelorette Weekend",
+      "Corporate Retreat",
+      "Birthday Weekend",
+      "Anniversary Trip",
+      "College Reunion",
+      "Friends Getaway",
+      "Ski Trip",
+      "Beach Weekend",
+      "Conference Group",
+      "Graduation Trip",
+      "Holiday Gathering"
+    ]
+  },
+  "inbox": {
+    "action": "report_only",
+    "note": "Open API cannot delete or archive conversations; archive manually in Guesty UI."
+  },
+  "apply": {
+    "maxBatchSize": 25,
+    "pauseMsBetweenCalls": 200
+  }
+}

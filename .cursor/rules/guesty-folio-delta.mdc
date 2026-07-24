@@ -1,0 +1,14 @@
+---
+description: Reconcile Guesty guest totalPaid vs Advanced Deposit folio
+globs:
+alwaysApply: true
+---
+
+When the user asks to compare, reconcile, or find deltas between a Guesty guest folio and Advanced Deposit:
+
+1. Run `npm run reconcile -- --confirmation <CODE>` (or `--reservation-id`).
+2. Present the report highlights and delta amount clearly.
+3. Do not invent totals — use CLI output only.
+4. Do not post payments or journal entries; report only.
+
+Demo account cleanup (cancel junk reservations / sanitize guests) is a separate skill: `.cursor/skills/guesty-demo-cleanup`. Do not run cleanup writes during folio reconcile.
