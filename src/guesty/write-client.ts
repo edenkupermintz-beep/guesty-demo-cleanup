@@ -37,22 +37,40 @@ export class GuestyWriteClient {
     return this.put(`/listings/${listingId}`, { nickname });
   }
 
+  /** Cancel a task instance (does not stop recurring series generators). */
+  async cancelTask(taskId: string): Promise<Json> {
+    return this.put(`/tasks-open-api/${taskId}`, { status: "canceled" });
+  }
+
+  /** Hard-delete a task instance (does not stop recurring series generators). */
+  async deleteTask(taskId: string): Promise<Json> {
+    return this.delete(`/tasks-open-api/${taskId}`);
+  }
+
   private async put(path: string, body: Json): Promise<Json> {
+    return this.request("PUT", path, body);
+  }
+
+  private async delete(path: string): Promise<Json> {
+    return this.request("DELETE", path);
+  }
+
+  private async request(method: "PUT" | "DELETE", path: string, body?: Json): Promise<Json> {
     const url = `${this.config.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
     const res = await fetch(url, {
-      method: "PUT",
+      method,
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json",
         Authorization: `Bearer ${this.config.accessToken}`,
+        ...(body ? { "Content-Type": "application/json" } : {}),
       },
-      body: JSON.stringify(body),
+      body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!res.ok) {
       const text = await res.text().catch(() => "");
       throw new Error(
-        `Guesty API ${res.status} ${res.statusText} for PUT ${path}: ${text.slice(0, 500)}`,
+        `Guesty API ${res.status} ${res.statusText} for ${method} ${path}: ${text.slice(0, 500)}`,
       );
     }
 

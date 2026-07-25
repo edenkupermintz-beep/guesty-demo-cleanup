@@ -18,3 +18,11 @@ dist/
 coverage/
 *.log
 .DS_Store
+tasks-cancel-plan.json
+tasks-cancel-results.json
+tasks-delete-plan.json
+tasks-delete-results.json
+auto-tasks-inventory.json
+auto-tasks-inventory-by-title.tsv
+task-templates-by-listing.json
+task-templates-by-listing.tsv

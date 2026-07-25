@@ -1,8 +1,9 @@
-# Guesty demo account cleanup
+# Apprentice — Guesty demo account cleanup
 
-Periodic / on-request hygiene for a heavily used **sales demo** Guesty account.
-Preserve rate plans and core setup. Clean operational clutter (guest names,
-listing **nicknames**, junk reservations). Report inbox debt that the API cannot wipe.
+**Apprentice** is the Cursor agent that runs this hygiene. Periodic / on-request
+cleanup for a heavily used **sales demo** Guesty account. Preserve rate plans and
+core setup. Clean operational clutter (guest names, listing **nicknames**, excess
+**tasks**, junk reservations). Report inbox debt that the API cannot wipe.
 
 This document is the shareable version of the Cursor skill at
 `.cursor/skills/guesty-demo-cleanup/` in the `guesty-demo-cleanup` repo.
@@ -18,6 +19,10 @@ cp .env.example .env
 # Put DEMO GUESTY_CLIENT_ID + GUESTY_CLIENT_SECRET in .env
 npm install
 ```
+
+If credentials are missing when Apprentice runs, it **asks the user** for demo
+`GUESTY_CLIENT_ID` + `GUESTY_CLIENT_SECRET`, writes gitignored `.env`, and
+continues (secrets are not echoed back in chat).
 
 Never commit `.env`, `guests-export.json`, `guest-rename-*.json`,
 `listing-nickname-*.json`, `listing-title-*.json`, or `mutation-plan.json`.
@@ -121,7 +126,21 @@ nicknames are internal labels).
 **Revert:** plan file stores `before` nicknames. PUT each listing’s `before`
 (skip rows with null `before`). Keep plan files gitignored.
 
-### 5. Optional: reservation / sanitize plan
+### 5. Tasks — export, plan, delete (prefer delete)
+
+```bash
+npm run cleanup:export-tasks
+npm run cleanup:plan-delete-tasks
+# → tasks-delete-plan.json (keep max 50 per title by default)
+# Stop — confirm keep/delete counts + top titles
+npm run cleanup:delete-tasks -- --apply --concurrency 2 --delay-ms 100
+```
+
+Prefer **DELETE** over cancel. Keep sparse demo volume (`tasks.keepPerTitle` in
+zero-state). Instance delete does not stop recurring series or auto-tasks —
+report UI: Edit task series; Properties → Automation → Auto-tasks.
+
+### 6. Optional: reservation / sanitize plan
 
 1. Audit reservations / guests vs zero-state policy.
 2. Propose a mutation plan (table + JSON).
@@ -136,9 +155,9 @@ npm run cleanup:apply -- --plan mutation-plan.json --apply
 
 Example schema: `scripts/cleanup/mutation-plan.example.json`.
 
-### 6. Report
+### 7. Report
 
-Surface successes, failures, and remaining manual inbox/channel work.
+Surface successes, failures, and remaining manual inbox/channel/series work.
 Do not invent API results — use script JSON output only.
 
 ---
@@ -148,6 +167,7 @@ Do not invent API results — use script JSON output only.
 - Default is propose + dry-run; never `--apply` without confirmation.
 - Guest hygiene = **names-only PUT**. Clearing notes / emails / phones requires an explicit request.
 - Listing hygiene = **nickname-only PUT**. Never title/rate/catalog by default.
+- Task hygiene = **DELETE** excess instances; keep sparse demo volume per title.
 - Do not send inbox messages as cleanup.
 - On Open API errors, surface exact script error text; stop batching if preferred.
 - Channel reservations: list as manual unless platform is in `safeCancelPlatforms` (default: `manual`, `direct`).
@@ -164,6 +184,9 @@ Do not invent API results — use script JSON output only.
 | `npm run cleanup:rename-guests -- --apply` | Apply guest names-only PUTs |
 | `npm run cleanup:rename-listing-nicknames` | Dry-run listing nickname plan |
 | `npm run cleanup:rename-listing-nicknames -- --apply` | Apply nickname-only PUTs |
+| `npm run cleanup:export-tasks` | Full task export → `tasks-export.json` |
+| `npm run cleanup:plan-delete-tasks` | Build delete plan (keep 50/title) |
+| `npm run cleanup:delete-tasks -- --apply` | DELETE planned excess tasks |
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |
@@ -179,6 +202,8 @@ Do not invent API results — use script JSON output only.
 | Update guest notes | Yes — optional `notes` / `goodToKnowNotes` | Only when explicitly asked |
 | Update listing **nickname** | Yes — `PUT /listings/{id}` `{ nickname }` | **Default listing hygiene.** Must be unique account-wide |
 | Update listing **title** | Yes — `PUT /listings/{id}` `{ title }` | 50-char limit; test listings need `Test_` prefix. **Not** default hygiene |
+| Delete task instances | Yes — `DELETE /tasks-open-api/{id}` | Prefer delete over cancel. Keep max N per title for demos |
+| Recurring series / auto-tasks | **No** public series-cancel API | UI: Edit task series; Auto-tasks |
 | Delete / archive inbox conversations | **No** | Report only; archive in Guesty UI |
 | Rate catalog / owners / account settings | Out of scope | Never mutate in this skill |
 

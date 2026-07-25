@@ -2,15 +2,16 @@
 
 ## NOTE: THIS SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN THIS SKILL ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
 
-
-Cursor skill + Open API scripts for **sales-demo Guesty account hygiene**.
+**Apprentice** is the Cursor agent for this repo: sales-demo Guesty account hygiene
+via skill + Open API scripts.
 
 Preserve rate plans and core setup. Clean operational clutter: guest names, listing
-**nicknames**, and junk reservations. Inbox wipe is not available via API (report as manual).
+**nicknames**, excess **tasks**, and junk reservations. Inbox wipe is not available via API (report as manual).
 
 Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
+Slash: **`/apprentice`** (or **`/guesty-demo-cleanup`**).
 Long-form docs: [`docs/guesty-demo-cleanup.md`](docs/guesty-demo-cleanup.md).
-Agent instructions: [`AGENTS.md`](AGENTS.md).
+Agent instructions: [`AGENTS.md`](AGENTS.md) (agent name: **Apprentice**).
 
 ## Setup
 
@@ -23,6 +24,10 @@ npm run token -- --write   # curl OAuth → writes GUESTY_ACCESS_TOKEN
 
 `.env` is gitignored. Never commit tokens.
 
+If `.env` / credentials are missing, **Apprentice asks you** for demo
+`GUESTY_CLIENT_ID` + `GUESTY_CLIENT_SECRET`, writes `.env`, and continues
+(without echoing secrets).
+
 Prefer the **demo** account credentials so cleanup cannot hit production.
 
 ## Workflow
@@ -34,6 +39,9 @@ npm run cleanup:rename-guests                 # dry-run; confirm before apply
 npm run cleanup:rename-guests -- --apply      # names-only PUT
 npm run cleanup:rename-listing-nicknames      # dry-run nicknames (titles untouched)
 npm run cleanup:rename-listing-nicknames -- --apply
+npm run cleanup:export-tasks
+npm run cleanup:plan-delete-tasks             # keep 50/title → tasks-delete-plan.json
+npm run cleanup:delete-tasks -- --apply       # confirm first
 
 # Optional reservation / sanitize plan (confirm first):
 npm run cleanup:apply -- --plan mutation-plan.json
@@ -44,6 +52,7 @@ Defaults:
 
 - Guest hygiene = **names only** (`firstName` + `lastName`)
 - Listing hygiene = **nickname only** (`GueStay - {City}[- {UnitType}]`; unique per Guesty)
+- Task hygiene = **DELETE** excess instances; keep max 50 per title (see `zero-state.json`)
 - Never change listing **titles**, rate plans, or account settings unless explicitly asked
 - Always dry-run first; never `--apply` without confirmation
 
@@ -55,7 +64,7 @@ Defaults:
 - `scripts/get-token.sh` — OAuth token refresh
 - `.cursor/skills/guesty-demo-cleanup/` — Cursor skill + zero-state policy
 - `docs/guesty-demo-cleanup.md` — shareable cleanup runbook
-- `AGENTS.md` — agent instructions for this repo
+- `AGENTS.md` — **Apprentice** agent instructions for this repo
 
 ## Scripts
 
@@ -67,6 +76,9 @@ Defaults:
 | `npm run cleanup:rename-guests -- --apply` | Apply guest names-only PUTs |
 | `npm run cleanup:rename-listing-nicknames` | Dry-run listing nickname plan |
 | `npm run cleanup:rename-listing-nicknames -- --apply` | Apply nickname-only PUTs |
+| `npm run cleanup:export-tasks` | Full task export → `tasks-export.json` |
+| `npm run cleanup:plan-delete-tasks` | Build delete plan (keep 50/title) |
+| `npm run cleanup:delete-tasks -- --apply` | DELETE planned excess tasks |
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |

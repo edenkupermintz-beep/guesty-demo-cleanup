@@ -9,6 +9,8 @@
 | Update guest notes | Yes — optional `notes` / `goodToKnowNotes` | Only when the user explicitly asks |
 | Update listing **nickname** | Yes — `PUT /listings/{id}` `{ nickname }` | **Default listing hygiene.** Must be unique account-wide |
 | Update listing **title** | Yes — `PUT /listings/{id}` `{ title }` | 50-char limit; test listings need `Test_` prefix. **Not** default hygiene |
+| List / get / update / delete task instances | Yes — `GET /tasks`, `PUT`/`DELETE /tasks-open-api/{id}` | Prefer **DELETE** for demo clutter. Cancel leaves canceled rows visible |
+| Recurring task series / auto-tasks | **No** dedicated public cancel-series API | UI: Edit task series; Properties → Auto-tasks. `GET /auto-tasks` + `GET /task-templates` exist but are undocumented |
 | Delete / archive inbox conversations | **No** | Report only; archive in Guesty UI |
 | Rate catalog / owners / account settings | Out of scope | Never mutate in this skill |
 
@@ -60,6 +62,37 @@ Plan file stores `before` nicknames. To revert, `PUT` each listing’s `before`
 We briefly applied **titles** by mistake; reverted from `listing-title-plan.json`
 `before` values. Prefer nicknames for GueStay labeling — titles are guest-facing
 marketing copy.
+
+## Tasks — export / plan / delete
+
+Prefer **DELETE** over cancel (cancel leaves clutter in the UI).
+
+```bash
+npm run cleanup:export-tasks
+# → tasks-export.json
+
+npm run cleanup:plan-delete-tasks
+# → tasks-delete-plan.json (default keepPerTitle=50)
+
+npm run cleanup:delete-tasks                 # dry-run summary
+npm run cleanup:delete-tasks -- --apply --concurrency 2 --delay-ms 100
+# → tasks-delete-results.json (resumable)
+```
+
+Policy (`zero-state.json` → `tasks`):
+
+- Keep max `keepPerTitle` active tasks (pending / confirmed / in progress) per
+  normalized title, account-wide — enough volume for demos, not one-per-listing spam.
+- Prefer keepers that are reservation-linked, then have a listing, then newest;
+  diversify listings when possible.
+- Leave completed (and other non-keepable statuses) out of the delete plan.
+- Instance DELETE does **not** stop calendar recurring series or reservation
+  auto-tasks. After apply, report UI: **Edit task series**, and
+  Properties → Automation → **Auto-tasks** / Task templates.
+- Optional inventory: `GET /auto-tasks`, `GET /task-templates` (undocumented but
+  live). Do not delete generators without an explicit user ask.
+
+Legacy: `npm run cleanup:cancel-tasks` still exists; do not prefer it.
 
 ## Mutation plan schema (`mutation-plan.json`)
 
@@ -122,11 +155,15 @@ Follow Guesty MCP PVE. Cap pagination; ask before deep export.
 
 | Path | Role |
 |------|------|
-| `src/guesty/write-client.ts` | PUT helpers (guest names, listing nickname, reservation status) |
+| `src/guesty/write-client.ts` | PUT helpers (guest names, listing nickname, reservation status) + task cancel/delete |
 | `src/cleanup/apply.ts` | Mutation plan apply / dry-run |
 | `scripts/cleanup/apply-plan.ts` | Reservation/sanitize CLI |
 | `scripts/cleanup/export-guests.ts` | Full guest export |
 | `scripts/cleanup/bulk-rename-guests.ts` | Guest names-only rename |
 | `scripts/cleanup/rename-listing-nicknames.ts` | Listing nickname rename |
+| `scripts/cleanup/export-tasks.ts` | Full task export |
+| `scripts/cleanup/plan-delete-tasks.ts` | Build keep-N / delete plan |
+| `scripts/cleanup/apply-delete-tasks.ts` | DELETE planned excess tasks |
+| `scripts/cleanup/apply-cancel-tasks.ts` | Legacy cancel path |
 | `scripts/get-token.sh` | OAuth → optional `--write` into `.env` |
 | `.cursor/skills/guesty-demo-cleanup/zero-state.json` | Policy + allowlists |

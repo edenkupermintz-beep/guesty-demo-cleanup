@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "description": "Demo account zero state: keep titles/rates/catalog; clean guest names, listing nicknames, and junk reservations.",
+  "version": 4,
+  "description": "Demo account zero state: keep titles/rates/catalog; clean guest names, listing nicknames, junk tasks, and junk reservations.",
   "neverTouch": [
     "listingTitles",
     "ratePlans",
@@ -33,6 +33,12 @@
     ],
     "maxPreferredPerBaseNickname": 3,
     "note": "Guesty enforces unique nicknames; script appends ' 2', ' 3', … when needed. Titles are marketing copy — do not change unless user asks."
+  },
+  "tasks": {
+    "preferredAction": "delete",
+    "keepPerTitle": 50,
+    "keepableStatuses": ["pending", "confirmed", "in progress"],
+    "note": "Prefer DELETE over cancel (cancel leaves clutter). Keep max keepPerTitle active tasks per normalized title account-wide for demos. Instance delete does not stop calendar recurring series or reservation auto-tasks — report those as UI: Edit task series / Properties → Automation → Auto-tasks. Inventory helpers: GET /task-templates, GET /auto-tasks (undocumented but live)."
   },
   "reservations": {
     "allowlistConfirmationCodes": [],
