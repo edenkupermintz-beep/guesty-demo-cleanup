@@ -106,6 +106,15 @@
     "action": "report_only",
     "note": "Open API cannot delete or archive conversations; archive manually in Guesty UI."
   },
+  "audit": {
+    "exportMaxAgeHours": 6,
+    "thresholds": {
+      "guestsRenameCount": 10,
+      "listingNicknameRenameCount": 3,
+      "tasksDeleteCount": 100
+    },
+    "note": "After token refresh, Apprentice runs cleanup:audit. Only propose hygiene for areas where value >= threshold. Always report every area with value, threshold, and MET / NOT MET."
+  },
   "apply": {
     "maxBatchSize": 25,
     "pauseMsBetweenCalls": 200

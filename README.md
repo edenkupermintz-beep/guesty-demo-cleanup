@@ -32,6 +32,8 @@ If `.env` / credentials are missing, **Apprentice asks you** for demo
 
 ```bash
 npm run token -- --write
+npm run cleanup:audit                         # value vs threshold per area; MET → propose
+# Only for areas that exceed audit thresholds:
 npm run cleanup:export-guests
 npm run cleanup:rename-guests                 # dry-run; confirm before apply
 npm run cleanup:rename-guests -- --apply      # names-only PUT
@@ -48,6 +50,7 @@ npm run cleanup:apply -- --plan mutation-plan.json --apply
 
 Defaults:
 
+- **Audit first** — only propose guests / nicknames / tasks when dirty ≥ threshold (`zero-state.json` → `audit`)
 - Guest hygiene = **names only** (`firstName` + `lastName`)
 - Listing hygiene = **nickname only** (`GueStay - {City}[- {UnitType}]`; unique per Guesty)
 - Task hygiene = **DELETE** excess instances; keep max 50 per title (see `zero-state.json`)
@@ -69,6 +72,7 @@ Defaults:
 | Command | Purpose |
 |---------|---------|
 | `npm run token -- --write` | OAuth → `.env` `GUESTY_ACCESS_TOKEN` |
+| `npm run cleanup:audit` | Dirty audit vs thresholds → `audit-report.json` |
 | `npm run cleanup:export-guests` | Full guest export → `guests-export.json` |
 | `npm run cleanup:rename-guests` | Dry-run guest bulk rename |
 | `npm run cleanup:rename-guests -- --apply` | Apply guest names-only PUTs |

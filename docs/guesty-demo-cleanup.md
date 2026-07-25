@@ -82,7 +82,17 @@ Scripts append ` 2`, ` 3`, … when needed and save `before` nicknames in the pl
 npm run token -- --write
 ```
 
-### 2. Export guests (audit input)
+### 2. Audit (always — gate all hygiene)
+
+```bash
+npm run cleanup:audit
+```
+
+Writes `audit-report.json`. Report every gated area with **value**, **threshold**, and **MET** / **NOT MET**. Only continue dry-run / apply for areas in `propose`.
+
+Default thresholds (`audit.thresholds`): guests renameCount ≥ 10, listing nicknames renameCount ≥ 3, tasks deleteCount ≥ 100.
+
+### 3. Export guests (only if guests proposed)
 
 ```bash
 npm run cleanup:export-guests
@@ -92,9 +102,9 @@ Writes gitignored `guests-export.json`. Optionally spot-check via Guesty MCP
 (`accountGet`, `guestsList`, `reservationsList`, `inboxConversationsList`) —
 cap pages; ask before deep MCP export.
 
-### 3. Bulk rename junk / duplicate guest names
+### 4. Bulk rename junk / duplicate guest names
 
-Dry-run (default) builds `guest-rename-plan.json` and prints counts + sample:
+Only if audit guests is MET. Dry-run (default) builds `guest-rename-plan.json` and prints counts + sample:
 
 ```bash
 npm run cleanup:rename-guests
@@ -112,7 +122,9 @@ collapse heavy duplicates (≥ 5 identical full names); avoid forbidden substrin
 
 Exit codes: `0` success, `1` usage/config/parse error, `2` one or more PUTs failed.
 
-### 4. Rename listing nicknames (titles untouched)
+### 5. Rename listing nicknames (titles untouched)
+
+Only if audit listingNicknames is MET.
 
 ```bash
 npm run cleanup:rename-listing-nicknames           # dry-run → listing-nickname-plan.json
@@ -126,7 +138,9 @@ nicknames are internal labels).
 **Revert:** plan file stores `before` nicknames. PUT each listing’s `before`
 (skip rows with null `before`). Keep plan files gitignored.
 
-### 5. Tasks — export, plan, delete (prefer delete)
+### 6. Tasks — export, plan, delete (prefer delete)
+
+Only if audit tasks is MET.
 
 ```bash
 npm run cleanup:export-tasks
@@ -140,7 +154,7 @@ Prefer **DELETE** over cancel. Keep sparse demo volume (`tasks.keepPerTitle` in
 zero-state). Instance delete does not stop recurring series or auto-tasks —
 report UI: Edit task series; Properties → Automation → Auto-tasks.
 
-### 6. Optional: reservation / sanitize plan
+### 7. Optional: reservation / sanitize plan
 
 1. Audit reservations / guests vs zero-state policy.
 2. Propose a mutation plan (table + JSON).
@@ -155,11 +169,11 @@ npm run cleanup:apply -- --plan mutation-plan.json --apply
 
 Example schema: `scripts/cleanup/mutation-plan.example.json`.
 
-### 7. Report
+### 8. Report
 
 Surface successes, failures, and remaining manual inbox/channel/series work.
 Do not invent API results — use script JSON output only.
-
+Always include audit MET / NOT MET lines with numbers.
 ---
 
 ## Safety defaults
@@ -179,6 +193,7 @@ Do not invent API results — use script JSON output only.
 | Command | Purpose |
 |---------|---------|
 | `npm run token -- --write` | OAuth → `.env` `GUESTY_ACCESS_TOKEN` |
+| `npm run cleanup:audit` | Dirty audit vs thresholds → `audit-report.json` |
 | `npm run cleanup:export-guests` | Full guest export → `guests-export.json` |
 | `npm run cleanup:rename-guests` | Dry-run guest bulk rename |
 | `npm run cleanup:rename-guests -- --apply` | Apply guest names-only PUTs |
@@ -275,6 +290,7 @@ For optional reservation cancel / explicit sanitize (not bulk rename paths):
 
 After a cleanup run, surface:
 
-1. Whether hygiene work is needed (junk/dupe names, nicknames, junk reservations, inbox)
-2. Planned counts + sample before/after
-3. After apply: success/failure from script JSON (`tokenConfigured`, never the token)
+1. Audit: each area’s value, threshold, MET / NOT MET (from `audit-report.json`)
+2. Whether hygiene work is needed (junk/dupe names, nicknames, junk reservations, inbox)
+3. Planned counts + sample before/after
+4. After apply: success/failure from script JSON (`tokenConfigured`, never the token)

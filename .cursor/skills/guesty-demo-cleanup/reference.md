@@ -14,6 +14,26 @@
 | Delete / archive inbox conversations | **No** | Report only; archive in Guesty UI |
 | Rate catalog / owners / account settings | Out of scope | Never mutate in this skill |
 
+## Audit gate
+
+```bash
+npm run cleanup:audit
+# → audit-report.json
+```
+
+After token refresh, Apprentice **always** audits before proposing hygiene.
+Thresholds live in `zero-state.json` → `audit.thresholds` (defaults: guests 10,
+nicknames 3, tasks 100). Reuses `guests-export.json` / `tasks-export.json` when
+fresher than `audit.exportMaxAgeHours` (default 6).
+
+Report fields Apprentice must surface:
+
+- `thresholdsMet` / `thresholdsNotMet` — each line includes area, metric, value, threshold, MET or NOT MET
+- `propose` / `skip` — which cleanup paths to run
+- Per-area samples only when MET
+
+Never invent numbers; quote script JSON only (`tokenConfigured`, never the token).
+
 ## Guest bulk rename
 
 ```bash
@@ -155,8 +175,14 @@ Follow Guesty MCP PVE. Cap pagination; ask before deep export.
 
 | Path | Role |
 |------|------|
+| `src/cleanup/audit.ts` | Threshold gate + audit report builder |
+| `src/cleanup/score-guests.ts` | Guest dirty renameCount scorer |
+| `src/cleanup/score-listing-nicknames.ts` | Nickname plan + renameCount scorer |
+| `src/cleanup/score-tasks.ts` | Task excess deleteCount scorer |
+| `src/cleanup/zero-state.ts` | Load zero-state / audit thresholds |
 | `src/guesty/write-client.ts` | PUT helpers (guest names, listing nickname, reservation status) + task cancel/delete |
 | `src/cleanup/apply.ts` | Mutation plan apply / dry-run |
+| `scripts/cleanup/audit.ts` | Audit CLI → `audit-report.json` |
 | `scripts/cleanup/apply-plan.ts` | Reservation/sanitize CLI |
 | `scripts/cleanup/export-guests.ts` | Full guest export |
 | `scripts/cleanup/bulk-rename-guests.ts` | Guest names-only rename |
@@ -166,4 +192,4 @@ Follow Guesty MCP PVE. Cap pagination; ask before deep export.
 | `scripts/cleanup/apply-delete-tasks.ts` | DELETE planned excess tasks |
 | `scripts/cleanup/apply-cancel-tasks.ts` | Legacy cancel path |
 | `scripts/get-token.sh` | OAuth → optional `--write` into `.env` |
-| `.cursor/skills/guesty-demo-cleanup/zero-state.json` | Policy + allowlists |
+| `.cursor/skills/guesty-demo-cleanup/zero-state.json` | Policy + allowlists + audit thresholds |

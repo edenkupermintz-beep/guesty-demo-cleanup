@@ -8,19 +8,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-
-type TaskRow = {
-  _id?: string;
-  id?: string;
-  title?: string;
-  status?: string;
-  type?: string;
-  listingId?: string;
-  listing?: { _id?: string };
-  reservationId?: string | null;
-  createdAt?: string;
-  updatedAt?: string;
-};
+import { scoreTasks, type TaskScoreRow } from "../../src/cleanup/score-tasks.js";
 
 const KEEPABLE = new Set(["pending", "confirmed", "in progress"]);
 
@@ -28,15 +16,15 @@ function normTitle(t: string | null | undefined) {
   return (t || "").normalize("NFKC").replace(/\s+/g, " ").trim().toLowerCase() || "(untitled)";
 }
 
-function listingKey(t: TaskRow) {
+function listingKey(t: TaskScoreRow) {
   return String(t.listingId || t.listing?._id || "(no listing)");
 }
 
-function taskId(t: TaskRow) {
+function taskId(t: TaskScoreRow) {
   return String(t._id || t.id);
 }
 
-function createdMs(t: TaskRow) {
+function createdMs(t: TaskScoreRow) {
   const d = Date.parse(t.createdAt || t.updatedAt || "0");
   return Number.isFinite(d) ? d : 0;
 }
@@ -76,9 +64,10 @@ async function main() {
 
   const raw = JSON.parse(readFileSync(args.exportPath, "utf8")) as {
     fetchedAt?: string;
-    tasks: TaskRow[];
+    tasks: TaskScoreRow[];
   };
 
+  // Full mutation list still needed for apply — rebuild keep/delete sets here.
   type Row = {
     id: string;
     title: string;
@@ -155,6 +144,13 @@ async function main() {
       keep: kept.length,
       delete: toDelete.length,
     });
+  }
+
+  const scored = scoreTasks(raw.tasks, { keepPerTitle: args.keepPerTitle });
+  if (scored.deleteCount !== del.length || scored.keep !== keep.length) {
+    console.error(
+      `warn: scoreTasks totals (${scored.keep}/${scored.deleteCount}) != plan (${keep.length}/${del.length})`,
+    );
   }
 
   const plan = {

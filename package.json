@@ -8,6 +8,7 @@
     "token": "bash scripts/get-token.sh",
     "next-reservation": "tsx scripts/next-reservation.ts",
     "cleanup:apply": "tsx scripts/cleanup/apply-plan.ts",
+    "cleanup:audit": "tsx scripts/cleanup/audit.ts",
     "cleanup:export-guests": "tsx scripts/cleanup/export-guests.ts",
     "cleanup:rename-guests": "tsx scripts/cleanup/bulk-rename-guests.ts",
     "cleanup:rename-listing-nicknames": "tsx scripts/cleanup/rename-listing-nicknames.ts",
