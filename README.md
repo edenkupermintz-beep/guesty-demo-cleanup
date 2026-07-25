@@ -6,7 +6,7 @@
 
 It cleans operational clutter: guest names, listing **nicknames**, excess **tasks**, and junk reservations.
 
-To get started, simply invoke the skill via /apprentice.
+To get started, simply invoke the skill via **`/apprentice`**.
 
 Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
 Slash: **`/apprentice`** (or **`/guesty-demo-cleanup`**).
