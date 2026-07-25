@@ -9,9 +9,10 @@ It cleans operational clutter: guest names, listing **nicknames**, excess **task
 To get started, simply invoke the skill via **`/apprentice`**.
 
 Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
-Slash: **`/apprentice`** (or **`/guesty-demo-cleanup`**).
+
 Long-form docs: [`docs/guesty-demo-cleanup.md`](docs/guesty-demo-cleanup.md).
-Agent instructions: [`AGENTS.md`](AGENTS.md) (agent name: **Apprentice**).
+
+Agent instructions: [`AGENTS.md`](AGENTS.md)
 
 ## Setup
 
