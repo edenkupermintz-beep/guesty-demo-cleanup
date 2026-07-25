@@ -2,11 +2,11 @@
 
 ## NOTE: THIS SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN THIS SKILL ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
 
-**Apprentice** is the Cursor agent for this repo: sales-demo Guesty account hygiene
-via skill + Open API scripts.
+**Apprentice** is the Cursor agent for this repo. It cleans the Guesty Sales demo account (or any account you point it at via OAuth credentials) using the Guesty MCP and the Open API.
 
-Preserve rate plans and core setup. Clean operational clutter: guest names, listing
-**nicknames**, excess **tasks**, and junk reservations. Inbox wipe is not available via API (report as manual).
+It cleans operational clutter: guest names, listing **nicknames**, excess **tasks**, and junk reservations.
+
+To get started, simply invoke the skill via /apprentice.
 
 Skill: [`.cursor/skills/guesty-demo-cleanup/`](.cursor/skills/guesty-demo-cleanup/).
 Slash: **`/apprentice`** (or **`/guesty-demo-cleanup`**).
@@ -27,8 +27,6 @@ npm run token -- --write   # curl OAuth → writes GUESTY_ACCESS_TOKEN
 If `.env` / credentials are missing, **Apprentice asks you** for demo
 `GUESTY_CLIENT_ID` + `GUESTY_CLIENT_SECRET`, writes `.env`, and continues
 (without echoing secrets).
-
-Prefer the **demo** account credentials so cleanup cannot hit production.
 
 ## Workflow
 
