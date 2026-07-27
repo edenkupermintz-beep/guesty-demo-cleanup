@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Cursor skill + Open API scripts for Guesty sales-demo account hygiene (guests, listing nicknames, tasks, junk reservations)",
+  "description": "Cursor skill + Open API scripts for Guesty sales-demo account hygiene (guests, listing nicknames, tasks, custom fields, junk reservations)",
   "scripts": {
     "token": "bash scripts/get-token.sh",
     "next-reservation": "tsx scripts/next-reservation.ts",
@@ -16,6 +16,8 @@
     "cleanup:plan-delete-tasks": "tsx scripts/cleanup/plan-delete-tasks.ts",
     "cleanup:delete-tasks": "tsx scripts/cleanup/apply-delete-tasks.ts",
     "cleanup:cancel-tasks": "tsx scripts/cleanup/apply-cancel-tasks.ts",
+    "cleanup:plan-custom-fields": "tsx scripts/cleanup/plan-custom-fields.ts",
+    "cleanup:apply-custom-fields": "tsx scripts/cleanup/apply-custom-fields.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit"

@@ -1,12 +1,35 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+export type CustomFieldObject = "listing" | "reservation";
+
+export type CustomFieldType =
+  | "text"
+  | "longtext"
+  | "number"
+  | "boolean"
+  | "date"
+  | "time"
+  | "enum"
+  | "user"
+  | "contact";
+
+export type CustomFieldCatalogEntry = {
+  key: string;
+  object: CustomFieldObject;
+  type: CustomFieldType;
+  isPublic: boolean;
+  displayName?: string;
+  options?: string[];
+};
+
 export type ZeroStateAudit = {
   exportMaxAgeHours: number;
   thresholds: {
     guestsRenameCount: number;
     listingNicknameRenameCount: number;
     tasksDeleteCount: number;
+    customFieldsDirtyCount: number;
   };
 };
 
@@ -25,6 +48,10 @@ export type ZeroState = {
     unitTypes?: string[];
     maxPreferredPerBaseNickname?: number;
   };
+  customFields?: {
+    catalog?: CustomFieldCatalogEntry[];
+    note?: string;
+  };
   audit?: Partial<ZeroStateAudit> & {
     thresholds?: Partial<ZeroStateAudit["thresholds"]>;
   };
@@ -37,6 +64,7 @@ const DEFAULT_AUDIT: ZeroStateAudit = {
     guestsRenameCount: 10,
     listingNicknameRenameCount: 3,
     tasksDeleteCount: 100,
+    customFieldsDirtyCount: 1,
   },
 };
 
@@ -65,6 +93,14 @@ export function resolveAuditConfig(zs: ZeroState = loadZeroState()): ZeroStateAu
         DEFAULT_AUDIT.thresholds.listingNicknameRenameCount,
       tasksDeleteCount:
         t.tasksDeleteCount ?? DEFAULT_AUDIT.thresholds.tasksDeleteCount,
+      customFieldsDirtyCount:
+        t.customFieldsDirtyCount ?? DEFAULT_AUDIT.thresholds.customFieldsDirtyCount,
     },
   };
+}
+
+export function resolveCustomFieldsCatalog(
+  zs: ZeroState = loadZeroState(),
+): CustomFieldCatalogEntry[] {
+  return zs.customFields?.catalog ?? [];
 }

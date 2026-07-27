@@ -10,6 +10,7 @@
 | Update listing **nickname** | Yes — `PUT /listings/{id}` `{ nickname }` | **Default listing hygiene.** Must be unique account-wide |
 | Update listing **title** | Yes — `PUT /listings/{id}` `{ title }` | 50-char limit; test listings need `Test_` prefix. **Not** default hygiene |
 | List / get / update / delete task instances | Yes — `GET /tasks`, `PUT`/`DELETE /tasks-open-api/{id}` | Prefer **DELETE** for demo clutter. Cancel leaves canceled rows visible |
+| Account custom-field definitions | Yes — `GET/POST/PUT/DELETE /accounts/{id}/custom-fields` | Enforce zero-state catalog (listing + reservation). Enum options only via PUT |
 | Recurring task series / auto-tasks | **No** dedicated public cancel-series API | UI: Edit task series; Properties → Auto-tasks. `GET /auto-tasks` + `GET /task-templates` exist but are undocumented |
 | Delete / archive inbox conversations | **No** | Report only; archive in Guesty UI |
 | Rate catalog / owners / account settings | Out of scope | Never mutate in this skill |
@@ -23,7 +24,7 @@ npm run cleanup:audit
 
 After token refresh, Apprentice **always** audits before proposing hygiene.
 Thresholds live in `zero-state.json` → `audit.thresholds` (defaults: guests 10,
-nicknames 3, tasks 100). Reuses `guests-export.json` / `tasks-export.json` when
+nicknames 3, tasks 100, custom fields 1). Reuses `guests-export.json` / `tasks-export.json` when
 fresher than `audit.exportMaxAgeHours` (default 6).
 
 Report fields Apprentice must surface:
@@ -114,6 +115,23 @@ Policy (`zero-state.json` → `tasks`):
 
 Legacy: `npm run cleanup:cancel-tasks` still exists; do not prefer it.
 
+## Custom fields — catalog sync
+
+```bash
+npm run cleanup:plan-custom-fields
+# → custom-fields-plan.json
+
+npm run cleanup:apply-custom-fields                 # dry-run
+npm run cleanup:apply-custom-fields -- --apply
+# → custom-fields-results.json (resumable)
+```
+
+Policy (`zero-state.json` → `customFields.catalog`): exactly 10 definitions
+(listing + reservation). Match by `key` + `object` (+ type). Delete extras /
+wrong-type / duplicates; create missing; PUT enum `options` when drifted.
+Uses `GET /accounts/me` for account id. Live list rows use `fieldId` (not `_id`).
+Definitions only.
+
 ## Mutation plan schema (`mutation-plan.json`)
 
 For optional reservation cancel / explicit sanitize (not bulk rename paths):
@@ -179,8 +197,9 @@ Follow Guesty MCP PVE. Cap pagination; ask before deep export.
 | `src/cleanup/score-guests.ts` | Guest dirty renameCount scorer |
 | `src/cleanup/score-listing-nicknames.ts` | Nickname plan + renameCount scorer |
 | `src/cleanup/score-tasks.ts` | Task excess deleteCount scorer |
+| `src/cleanup/score-custom-fields.ts` | Custom-field catalog dirtyCount scorer / planner |
 | `src/cleanup/zero-state.ts` | Load zero-state / audit thresholds |
-| `src/guesty/write-client.ts` | PUT helpers (guest names, listing nickname, reservation status) + task cancel/delete |
+| `src/guesty/write-client.ts` | PUT/POST/DELETE helpers (guests, nicknames, tasks, custom fields) |
 | `src/cleanup/apply.ts` | Mutation plan apply / dry-run |
 | `scripts/cleanup/audit.ts` | Audit CLI → `audit-report.json` |
 | `scripts/cleanup/apply-plan.ts` | Reservation/sanitize CLI |
@@ -191,5 +210,7 @@ Follow Guesty MCP PVE. Cap pagination; ask before deep export.
 | `scripts/cleanup/plan-delete-tasks.ts` | Build keep-N / delete plan |
 | `scripts/cleanup/apply-delete-tasks.ts` | DELETE planned excess tasks |
 | `scripts/cleanup/apply-cancel-tasks.ts` | Legacy cancel path |
+| `scripts/cleanup/plan-custom-fields.ts` | Custom-field catalog plan |
+| `scripts/cleanup/apply-custom-fields.ts` | Apply custom-field catalog sync |
 | `scripts/get-token.sh` | OAuth → optional `--write` into `.env` |
 | `.cursor/skills/guesty-demo-cleanup/zero-state.json` | Policy + allowlists + audit thresholds |

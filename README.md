@@ -4,7 +4,8 @@
 
 **Apprentice** is the Cursor agent for this repo. It cleans the Guesty Sales demo account (or any account you point it at via OAuth credentials) using the Guesty MCP and the Open API.
 
-It cleans operational clutter: guest names, listing **nicknames**, excess **tasks**, and junk reservations.
+It cleans operational clutter: guest names, listing **nicknames**, excess **tasks**,
+**custom field** definitions, and junk reservations.
 
 To get started, simply invoke the skill via **`/apprentice`**.
 
@@ -43,6 +44,8 @@ npm run cleanup:rename-listing-nicknames -- --apply
 npm run cleanup:export-tasks
 npm run cleanup:plan-delete-tasks             # keep 50/title → tasks-delete-plan.json
 npm run cleanup:delete-tasks -- --apply       # confirm first
+npm run cleanup:plan-custom-fields            # catalog sync plan
+npm run cleanup:apply-custom-fields -- --apply  # confirm first
 
 # Optional reservation / sanitize plan (confirm first):
 npm run cleanup:apply -- --plan mutation-plan.json
@@ -51,10 +54,11 @@ npm run cleanup:apply -- --plan mutation-plan.json --apply
 
 Defaults:
 
-- **Audit first** — only propose guests / nicknames / tasks when dirty ≥ threshold (`zero-state.json` → `audit`)
+- **Audit first** — only propose guests / nicknames / tasks / custom fields when dirty ≥ threshold (`zero-state.json` → `audit`)
 - Guest hygiene = **names only** (`firstName` + `lastName`)
 - Listing hygiene = **nickname only** (`GueStay - {City}[- {UnitType}]`; unique per Guesty)
 - Task hygiene = **DELETE** excess instances; keep max 50 per title (see `zero-state.json`)
+- Custom fields = enforce `customFields.catalog` (listing + reservation definitions)
 - Never change listing **titles**, rate plans, or account settings unless explicitly asked
 - Always dry-run first; never `--apply` without confirmation
 
@@ -82,6 +86,8 @@ Defaults:
 | `npm run cleanup:export-tasks` | Full task export → `tasks-export.json` |
 | `npm run cleanup:plan-delete-tasks` | Build delete plan (keep 50/title) |
 | `npm run cleanup:delete-tasks -- --apply` | DELETE planned excess tasks |
+| `npm run cleanup:plan-custom-fields` | Plan catalog sync → `custom-fields-plan.json` |
+| `npm run cleanup:apply-custom-fields -- --apply` | Apply custom-field catalog sync |
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |

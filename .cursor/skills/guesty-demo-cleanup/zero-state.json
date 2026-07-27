@@ -1,6 +1,6 @@
 {
-  "version": 4,
-  "description": "Demo account zero state: keep titles/rates/catalog; clean guest names, listing nicknames, junk tasks, and junk reservations.",
+  "version": 5,
+  "description": "Demo account zero state: keep titles/rates/catalog; clean guest names, listing nicknames, junk tasks, custom field definitions, and junk reservations.",
   "neverTouch": [
     "listingTitles",
     "ratePlans",
@@ -102,6 +102,82 @@
       "Holiday Gathering"
     ]
   },
+  "customFields": {
+    "note": "Account-level definitions only (listing + reservation). Desired state = exactly this catalog; delete extras, create missing, fix enum options. Does not clear per-entity values.",
+    "catalog": [
+      {
+        "key": "lockbox_code",
+        "object": "listing",
+        "type": "text",
+        "isPublic": true,
+        "displayName": "Lockbox code"
+      },
+      {
+        "key": "pets_allowed",
+        "object": "listing",
+        "type": "boolean",
+        "isPublic": true,
+        "displayName": "Pets allowed"
+      },
+      {
+        "key": "max_parking_spots",
+        "object": "listing",
+        "type": "number",
+        "isPublic": true,
+        "displayName": "Max parking spots"
+      },
+      {
+        "key": "access_instructions",
+        "object": "listing",
+        "type": "longtext",
+        "isPublic": true,
+        "displayName": "Access instructions"
+      },
+      {
+        "key": "unit_condition",
+        "object": "listing",
+        "type": "enum",
+        "isPublic": true,
+        "displayName": "Unit condition",
+        "options": ["Excellent", "Good", "Fair", "Needs work"]
+      },
+      {
+        "key": "guest_preference_note",
+        "object": "reservation",
+        "type": "text",
+        "isPublic": true,
+        "displayName": "Guest preference note"
+      },
+      {
+        "key": "requested_checkin_time",
+        "object": "reservation",
+        "type": "time",
+        "isPublic": true,
+        "displayName": "Requested check-in time"
+      },
+      {
+        "key": "special_occasion_date",
+        "object": "reservation",
+        "type": "date",
+        "isPublic": true,
+        "displayName": "Special occasion date"
+      },
+      {
+        "key": "assigned_ops_lead",
+        "object": "reservation",
+        "type": "user",
+        "isPublic": true,
+        "displayName": "Assigned ops lead"
+      },
+      {
+        "key": "local_emergency_contact",
+        "object": "reservation",
+        "type": "contact",
+        "isPublic": true,
+        "displayName": "Local emergency contact"
+      }
+    ]
+  },
   "inbox": {
     "action": "report_only",
     "note": "Open API cannot delete or archive conversations; archive manually in Guesty UI."
@@ -111,7 +187,8 @@
     "thresholds": {
       "guestsRenameCount": 10,
       "listingNicknameRenameCount": 3,
-      "tasksDeleteCount": 100
+      "tasksDeleteCount": 100,
+      "customFieldsDirtyCount": 1
     },
     "note": "After token refresh, Apprentice runs cleanup:audit. Only propose hygiene for areas where value >= threshold. Always report every area with value, threshold, and MET / NOT MET."
   },

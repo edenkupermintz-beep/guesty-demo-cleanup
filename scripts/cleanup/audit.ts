@@ -8,6 +8,7 @@
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { buildAuditReport } from "../../src/cleanup/audit.js";
+import { scoreCustomFields } from "../../src/cleanup/score-custom-fields.js";
 import { scoreGuests } from "../../src/cleanup/score-guests.js";
 import {
   scoreListingNicknames,
@@ -17,8 +18,10 @@ import { scoreTasks } from "../../src/cleanup/score-tasks.js";
 import {
   loadZeroState,
   resolveAuditConfig,
+  resolveCustomFieldsCatalog,
 } from "../../src/cleanup/zero-state.js";
 import { hasGuestyAuthConfigured, loadConfig } from "../../src/guesty/config.js";
+import { GuestyWriteClient } from "../../src/guesty/write-client.js";
 
 function hoursAgo(iso: string | undefined): number | null {
   if (!iso) return null;
@@ -222,7 +225,7 @@ async function main(): Promise<void> {
   const config = await loadConfig();
 
   console.error(
-    `audit thresholds: guests>=${auditCfg.thresholds.guestsRenameCount} nicknames>=${auditCfg.thresholds.listingNicknameRenameCount} tasks>=${auditCfg.thresholds.tasksDeleteCount} (exportMaxAgeHours=${auditCfg.exportMaxAgeHours})`,
+    `audit thresholds: guests>=${auditCfg.thresholds.guestsRenameCount} nicknames>=${auditCfg.thresholds.listingNicknameRenameCount} tasks>=${auditCfg.thresholds.tasksDeleteCount} customFields>=${auditCfg.thresholds.customFieldsDirtyCount} (exportMaxAgeHours=${auditCfg.exportMaxAgeHours})`,
   );
 
   const guestsExport = await ensureGuestsExport(
@@ -263,6 +266,15 @@ async function main(): Promise<void> {
     keepableStatuses: zs.tasks?.keepableStatuses,
   });
 
+  const writeClient = new GuestyWriteClient(config);
+  const { id: accountId } = await writeClient.getAccountMe();
+  const liveCustomFields = await writeClient.listCustomFields(accountId);
+  const catalog = resolveCustomFieldsCatalog(zs);
+  console.error(
+    `customFields: account=${accountId} live=${liveCustomFields.length} catalog=${catalog.length}`,
+  );
+  const customFieldScore = scoreCustomFields(liveCustomFields, catalog);
+
   const report = buildAuditReport({
     thresholds: auditCfg.thresholds,
     guests: {
@@ -283,6 +295,13 @@ async function main(): Promise<void> {
       keepPerTitle: taskScore.keepPerTitle,
       exported: taskScore.exported,
       topDeleteTitles: taskScore.topDeleteTitles,
+    },
+    customFields: {
+      dirtyCount: customFieldScore.dirtyCount,
+      liveCount: customFieldScore.liveCount,
+      catalogCount: customFieldScore.catalogCount,
+      keep: customFieldScore.keep,
+      sample: customFieldScore.sample,
     },
     inboxNote: zs.inbox?.note,
   });
@@ -325,6 +344,15 @@ async function main(): Promise<void> {
             summary: report.areas.tasks.summary,
             extra: report.areas.tasks.extra,
             sample: report.areas.tasks.sample,
+          },
+          customFields: {
+            value: report.areas.customFields.value,
+            threshold: report.areas.customFields.threshold,
+            verdict: report.areas.customFields.verdict,
+            action: report.areas.customFields.action,
+            summary: report.areas.customFields.summary,
+            extra: report.areas.customFields.extra,
+            sample: report.areas.customFields.sample,
           },
           inbox: report.areas.inbox,
           reservations: report.areas.reservations,

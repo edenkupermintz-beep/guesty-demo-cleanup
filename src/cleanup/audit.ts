@@ -1,6 +1,10 @@
 export type ThresholdVerdict = "MET" | "NOT_MET";
 
-export type AuditedAreaKey = "guests" | "listingNicknames" | "tasks";
+export type AuditedAreaKey =
+  | "guests"
+  | "listingNicknames"
+  | "tasks"
+  | "customFields";
 
 export type ThresholdLine = {
   area: AuditedAreaKey;
@@ -38,11 +42,13 @@ export type AuditReport = {
     guestsRenameCount: number;
     listingNicknameRenameCount: number;
     tasksDeleteCount: number;
+    customFieldsDirtyCount: number;
   };
   areas: {
     guests: AreaAuditResult;
     listingNicknames: AreaAuditResult;
     tasks: AreaAuditResult;
+    customFields: AreaAuditResult;
     inbox: NonGatedArea;
     reservations: NonGatedArea;
   };
@@ -83,6 +89,7 @@ export function buildAuditReport(input: {
     guestsRenameCount: number;
     listingNicknameRenameCount: number;
     tasksDeleteCount: number;
+    customFieldsDirtyCount: number;
   };
   guests: {
     renameCount: number;
@@ -102,6 +109,13 @@ export function buildAuditReport(input: {
     keepPerTitle: number;
     exported: number;
     topDeleteTitles?: unknown[];
+  };
+  customFields: {
+    dirtyCount: number;
+    liveCount: number;
+    catalogCount: number;
+    keep: number;
+    sample?: unknown[];
   };
   inboxNote?: string;
 }): AuditReport {
@@ -146,7 +160,22 @@ export function buildAuditReport(input: {
     },
   };
 
-  const gated = [guests, listingNicknames, tasks];
+  const customFields = {
+    ...gateThreshold(
+      "customFields",
+      "dirtyCount",
+      input.customFields.dirtyCount,
+      input.thresholds.customFieldsDirtyCount,
+    ),
+    sample: input.customFields.sample,
+    extra: {
+      liveCount: input.customFields.liveCount,
+      catalogCount: input.customFields.catalogCount,
+      keep: input.customFields.keep,
+    },
+  };
+
+  const gated = [guests, listingNicknames, tasks, customFields];
   const thresholdsMet: ThresholdLine[] = [];
   const thresholdsNotMet: ThresholdLine[] = [];
   const propose: AuditedAreaKey[] = [];
@@ -179,6 +208,7 @@ export function buildAuditReport(input: {
       guests,
       listingNicknames,
       tasks,
+      customFields,
       inbox: {
         area: "inbox",
         action: "report_only",

@@ -23,6 +23,8 @@ tasks-cancel-plan.json
 tasks-cancel-results.json
 tasks-delete-plan.json
 tasks-delete-results.json
+custom-fields-plan.json
+custom-fields-results.json
 auto-tasks-inventory.json
 auto-tasks-inventory-by-title.tsv
 task-templates-by-listing.json

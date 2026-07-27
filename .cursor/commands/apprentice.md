@@ -20,5 +20,5 @@ You are **Apprentice**. Run the project demo-cleanup workflow.
 
 Any text after this command is extra scope from the user — honor it within policy.
 
-Default playbook: audit gate → guests / listing nicknames / task deletes only when
-dirty enough. Always dry-run / confirm before `--apply`.
+Default playbook: audit gate → guests / listing nicknames / task deletes / custom
+fields only when dirty enough. Always dry-run / confirm before `--apply`.

@@ -1,4 +1,8 @@
 import type { GuestyConfig } from "./config.js";
+import type {
+  CustomFieldObject,
+  CustomFieldType,
+} from "../cleanup/zero-state.js";
 
 type Json = Record<string, unknown>;
 
@@ -9,6 +13,26 @@ export type SanitizeGuestInput = {
   lastName: string;
   notes?: string;
   goodToKnowNotes?: string;
+};
+
+export type CustomFieldCreateInput = {
+  key: string;
+  object: CustomFieldObject;
+  type: CustomFieldType;
+  isPublic: boolean;
+  options?: string[];
+};
+
+export type CustomFieldLive = {
+  id?: string;
+  _id?: string;
+  fieldId?: string;
+  key?: string;
+  object?: string;
+  type?: string;
+  isPublic?: boolean;
+  displayName?: string;
+  options?: string[];
 };
 
 /** Write-capable Guesty Open API client for demo account cleanup. */
@@ -47,6 +71,90 @@ export class GuestyWriteClient {
     return this.delete(`/tasks-open-api/${taskId}`);
   }
 
+  /** Resolve authenticated account id via GET /accounts/me. */
+  async getAccountMe(): Promise<{ id: string; raw: Json }> {
+    const raw = await this.get("/accounts/me");
+    const id = String(
+      raw._id ?? raw.id ?? (raw.account as Json | undefined)?._id ?? "",
+    );
+    if (!id) {
+      throw new Error("GET /accounts/me did not return an account id");
+    }
+    return { id, raw };
+  }
+
+  /** List account custom-field definitions. */
+  async listCustomFields(accountId: string): Promise<CustomFieldLive[]> {
+    const raw = await this.get(`/accounts/${accountId}/custom-fields`);
+    if (Array.isArray(raw)) return raw as CustomFieldLive[];
+    const nested =
+      (raw as { customFields?: CustomFieldLive[]; results?: CustomFieldLive[] })
+        .customFields ??
+      (raw as { results?: CustomFieldLive[] }).results;
+    if (Array.isArray(nested)) return nested;
+    return [];
+  }
+
+  /** Create one or more custom-field definitions. */
+  async createCustomFields(
+    accountId: string,
+    fields: CustomFieldCreateInput[],
+  ): Promise<Json> {
+    return this.post(`/accounts/${accountId}/custom-fields`, {
+      customFields: fields.map((f) => {
+        const row: Json = {
+          key: f.key,
+          object: f.object,
+          type: f.type,
+          isPublic: f.isPublic,
+        };
+        if (f.type === "enum") row.options = f.options ?? [];
+        return row;
+      }),
+    });
+  }
+
+  /** Delete a custom-field definition. */
+  async deleteCustomField(accountId: string, fieldId: string): Promise<Json> {
+    return this.delete(`/accounts/${accountId}/custom-fields/${fieldId}`);
+  }
+
+  /**
+   * Update enum options on a custom field.
+   * Guesty only allows editing `options` on type:enum; send the full object.
+   */
+  async updateCustomFieldOptions(
+    accountId: string,
+    input: {
+      fieldId: string;
+      key: string;
+      object: CustomFieldObject;
+      isPublic: boolean;
+      options: string[];
+    },
+  ): Promise<Json> {
+    return this.put(`/accounts/${accountId}/custom-fields`, {
+      customFields: [
+        {
+          fieldId: input.fieldId,
+          key: input.key,
+          object: input.object,
+          type: "enum",
+          isPublic: input.isPublic,
+          options: input.options,
+        },
+      ],
+    });
+  }
+
+  private async get(path: string): Promise<Json> {
+    return this.request("GET", path);
+  }
+
+  private async post(path: string, body: Json): Promise<Json> {
+    return this.request("POST", path, body);
+  }
+
   private async put(path: string, body: Json): Promise<Json> {
     return this.request("PUT", path, body);
   }
@@ -55,7 +163,11 @@ export class GuestyWriteClient {
     return this.request("DELETE", path);
   }
 
-  private async request(method: "PUT" | "DELETE", path: string, body?: Json): Promise<Json> {
+  private async request(
+    method: "GET" | "POST" | "PUT" | "DELETE",
+    path: string,
+    body?: Json,
+  ): Promise<Json> {
     const url = `${this.config.baseUrl}${path.startsWith("/") ? path : `/${path}`}`;
     const res = await fetch(url, {
       method,

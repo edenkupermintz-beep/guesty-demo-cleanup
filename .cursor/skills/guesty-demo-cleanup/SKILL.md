@@ -4,10 +4,11 @@ description: >-
   Apprentice — recurring sales-demo hygiene for Guesty: refresh Open API token,
   export/audit guests, bulk-rename junk/duplicate guest names (names-only PUT),
   rename listing nicknames to GueStay - City[- UnitType], delete excess tasks
-  (keep N per title), optionally cancel junk reservations per zero-state after
-  confirmation. Use when the user asks to clean, reset, sanitize, or periodically
-  tidy a Guesty demo account — guests, listing nicknames, reservations, tasks,
-  or inbox clutter.
+  (keep N per title), enforce a fixed listing+reservation custom-field catalog,
+  optionally cancel junk reservations per zero-state after confirmation. Use when
+  the user asks to clean, reset, sanitize, or periodically tidy a Guesty demo
+  account — guests, listing nicknames, reservations, tasks, custom fields, or
+  inbox clutter.
 ---
 
 # Apprentice — Guesty demo account cleanup
@@ -18,8 +19,8 @@ as Apprentice. Do **not** re-introduce or say “I am Apprentice” on later tur
 
 Periodic / on-request cleanup for a heavily used **sales demo** Guesty account.
 Preserve rate plans and core setup. Clean operational clutter (guest names,
-listing **nicknames**, excess **tasks**, junk reservations). Report inbox debt
-that the API cannot wipe.
+listing **nicknames**, excess **tasks**, **custom field** definitions, junk
+reservations). Report inbox debt that the API cannot wipe.
 
 This repository is **cleanup-only**.
 
@@ -57,7 +58,7 @@ explicitly insists after a clear warning.
 
 Never commit `.env`, `guests-export.json`, `guest-rename-*.json`,
 `listing-nickname-*.json`, `listing-title-*.json`, `tasks-*.json`,
-`mutation-plan.json`, or result JSON artifacts.
+`custom-fields-*.json`, `mutation-plan.json`, or result JSON artifacts.
 
 Prefer the **demo** account credentials so cleanup cannot hit production.
 Never print the full Open API token in chat or CLI output (scripts report
@@ -87,6 +88,9 @@ Load [zero-state.json](zero-state.json) before proposing mutations.
   in-progress. Instance delete does **not** stop calendar recurring series or
   reservation auto-tasks — report UI follow-ups (Edit task series; Properties →
   Automation → Auto-tasks).
+- **Custom fields (default hygiene):** Enforce `customFields.catalog` in
+  zero-state (10 listing+reservation definitions). Delete extras, create missing,
+  fix enum `options` drift. Definitions only — do not clear per-entity values.
 - **Reservations:** skip allowlisted confirmation codes / IDs; skip already-terminal
   statuses; skip channel-managed bookings when `skipChannelManaged` is true (list as
   manual); otherwise `closed`/`declined` for inquiries, `canceled` for confirmed
@@ -122,6 +126,7 @@ Default thresholds (`zero-state.json` → `audit.thresholds`):
 | Guests | `renameCount` | 10 |
 | Listing nicknames | `renameCount` | 3 |
 | Tasks | `deleteCount` | 100 |
+| Custom fields | `dirtyCount` | 1 |
 
 Only continue with dry-run / confirm / apply for areas in `propose`. Do **not** invent numbers — quote script JSON (`tokenConfigured`, never the token).
 
@@ -207,7 +212,28 @@ Optional inventory: `GET /auto-tasks` and `GET /task-templates` (live but not in
 official Open API docs) — list titles for UI turn-off; do not DELETE those without
 explicit user ask.
 
-### 7. Optional: reservation / sanitize plan (confirm-before-apply)
+### 7. Custom fields — enforce demo catalog
+
+Only if audit `customFields` is **MET**.
+
+```bash
+npm run cleanup:plan-custom-fields
+# → custom-fields-plan.json (delete extras / fix enum options / create missing)
+```
+
+**Stop.** Show totals (delete / fix / create) + a short sample. Wait for explicit
+confirmation.
+
+```bash
+npm run cleanup:apply-custom-fields -- --apply
+```
+
+Policy (`zero-state.json` → `customFields.catalog`): exactly 10 listing+reservation
+definitions (all Guesty types + one extra text). Match by `key` + `object` (+ type).
+Wrong type → delete + recreate. Enum options drift → PUT options only. Definitions
+only — do not clear values on properties/reservations.
+
+### 8. Optional: reservation / sanitize plan (confirm-before-apply)
 
 1. Audit reservations / guests vs [zero-state.json](zero-state.json).
 2. Propose a mutation plan (table + JSON).
@@ -215,7 +241,7 @@ explicit user ask.
 4. Write gitignored `mutation-plan.json`.
 5. Dry-run then apply via `npm run cleanup:apply`.
 
-### 8. Report
+### 9. Report
 
 Surface successes, failures, remaining manual inbox/channel/series work. Do not
 invent API results — use script JSON output only (`tokenConfigured`, never the token).
@@ -228,6 +254,7 @@ Always include the audit MET / NOT MET lines from the latest `audit-report.json`
   requires an explicit user request.
 - Listing hygiene default = **nickname-only PUT**. Never title/rate/catalog.
 - Task hygiene default = **DELETE** excess instances; keep sparse demo volume.
+- Custom fields default = enforce catalog (delete / create / fix enum options).
 - Do not send inbox messages as cleanup.
 - On Open API errors, surface exact script error text; stop batching if the user prefers.
 - Channel reservations: list as manual unless platform is in `safeCancelPlatforms`.
@@ -247,6 +274,8 @@ Always include the audit MET / NOT MET lines from the latest `audit-report.json`
 | `npm run cleanup:plan-delete-tasks` | Build `tasks-delete-plan.json` (keep 50/title) |
 | `npm run cleanup:delete-tasks -- --apply` | DELETE planned excess tasks |
 | `npm run cleanup:cancel-tasks -- --apply` | Legacy cancel path (prefer delete) |
+| `npm run cleanup:plan-custom-fields` | Plan catalog sync → `custom-fields-plan.json` |
+| `npm run cleanup:apply-custom-fields -- --apply` | Apply delete/create/fix-options |
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |
@@ -254,7 +283,7 @@ Always include the audit MET / NOT MET lines from the latest `audit-report.json`
 ## Output format
 
 1. After audit: **every** gated area with value, threshold, and MET / NOT MET; lists of thresholds met vs not met
-2. Whether hygiene work is needed (only for MET areas: junk/dupe names, nicknames, tasks, junk reservations, inbox)
+2. Whether hygiene work is needed (only for MET areas: junk/dupe names, nicknames, tasks, custom fields, junk reservations, inbox)
 3. Planned counts + sample before/after (MET areas only)
 4. After apply: success/failure from script JSON
 5. Remaining manual work (inbox, channel extranets, task series / auto-tasks)

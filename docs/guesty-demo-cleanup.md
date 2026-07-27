@@ -90,7 +90,7 @@ npm run cleanup:audit
 
 Writes `audit-report.json`. Report every gated area with **value**, **threshold**, and **MET** / **NOT MET**. Only continue dry-run / apply for areas in `propose`.
 
-Default thresholds (`audit.thresholds`): guests renameCount ≥ 10, listing nicknames renameCount ≥ 3, tasks deleteCount ≥ 100.
+Default thresholds (`audit.thresholds`): guests renameCount ≥ 10, listing nicknames renameCount ≥ 3, tasks deleteCount ≥ 100, custom fields dirtyCount ≥ 1.
 
 ### 3. Export guests (only if guests proposed)
 
@@ -154,7 +154,21 @@ Prefer **DELETE** over cancel. Keep sparse demo volume (`tasks.keepPerTitle` in
 zero-state). Instance delete does not stop recurring series or auto-tasks —
 report UI: Edit task series; Properties → Automation → Auto-tasks.
 
-### 7. Optional: reservation / sanitize plan
+### 7. Custom fields — enforce demo catalog
+
+Only if audit customFields is MET.
+
+```bash
+npm run cleanup:plan-custom-fields
+# → custom-fields-plan.json
+# Stop — confirm delete / fix / create counts + sample
+npm run cleanup:apply-custom-fields -- --apply
+```
+
+Enforce `customFields.catalog` (10 listing+reservation definitions). Delete extras,
+create missing, fix enum options. Definitions only.
+
+### 8. Optional: reservation / sanitize plan
 
 1. Audit reservations / guests vs zero-state policy.
 2. Propose a mutation plan (table + JSON).
@@ -169,7 +183,7 @@ npm run cleanup:apply -- --plan mutation-plan.json --apply
 
 Example schema: `scripts/cleanup/mutation-plan.example.json`.
 
-### 8. Report
+### 9. Report
 
 Surface successes, failures, and remaining manual inbox/channel/series work.
 Do not invent API results — use script JSON output only.
@@ -182,6 +196,7 @@ Always include audit MET / NOT MET lines with numbers.
 - Guest hygiene = **names-only PUT**. Clearing notes / emails / phones requires an explicit request.
 - Listing hygiene = **nickname-only PUT**. Never title/rate/catalog by default.
 - Task hygiene = **DELETE** excess instances; keep sparse demo volume per title.
+- Custom fields = enforce catalog (delete / create / fix enum options). Definitions only.
 - Do not send inbox messages as cleanup.
 - On Open API errors, surface exact script error text; stop batching if preferred.
 - Channel reservations: list as manual unless platform is in `safeCancelPlatforms` (default: `manual`, `direct`).
@@ -202,6 +217,8 @@ Always include audit MET / NOT MET lines with numbers.
 | `npm run cleanup:export-tasks` | Full task export → `tasks-export.json` |
 | `npm run cleanup:plan-delete-tasks` | Build delete plan (keep 50/title) |
 | `npm run cleanup:delete-tasks -- --apply` | DELETE planned excess tasks |
+| `npm run cleanup:plan-custom-fields` | Plan catalog sync → `custom-fields-plan.json` |
+| `npm run cleanup:apply-custom-fields -- --apply` | Apply custom-field catalog sync |
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |
@@ -218,6 +235,7 @@ Always include audit MET / NOT MET lines with numbers.
 | Update listing **nickname** | Yes — `PUT /listings/{id}` `{ nickname }` | **Default listing hygiene.** Must be unique account-wide |
 | Update listing **title** | Yes — `PUT /listings/{id}` `{ title }` | 50-char limit; test listings need `Test_` prefix. **Not** default hygiene |
 | Delete task instances | Yes — `DELETE /tasks-open-api/{id}` | Prefer delete over cancel. Keep max N per title for demos |
+| Account custom-field definitions | Yes — `GET/POST/PUT/DELETE /accounts/{id}/custom-fields` | Enforce zero-state catalog (listing + reservation) |
 | Recurring series / auto-tasks | **No** public series-cancel API | UI: Edit task series; Auto-tasks |
 | Delete / archive inbox conversations | **No** | Report only; archive in Guesty UI |
 | Rate catalog / owners / account settings | Out of scope | Never mutate in this skill |

@@ -1,9 +1,33 @@
 import { describe, expect, it } from "vitest";
 import { buildAuditReport, gateThreshold } from "../src/cleanup/audit.js";
+import { scoreCustomFields } from "../src/cleanup/score-custom-fields.js";
 import { scoreGuests } from "../src/cleanup/score-guests.js";
 import { scoreListingNicknames } from "../src/cleanup/score-listing-nicknames.js";
 import { scoreTasks } from "../src/cleanup/score-tasks.js";
 import { parseMutationPlan } from "../src/cleanup/apply.js";
+import type { CustomFieldCatalogEntry } from "../src/cleanup/zero-state.js";
+
+const DEMO_CATALOG: CustomFieldCatalogEntry[] = [
+  {
+    key: "lockbox_code",
+    object: "listing",
+    type: "text",
+    isPublic: true,
+  },
+  {
+    key: "unit_condition",
+    object: "listing",
+    type: "enum",
+    isPublic: true,
+    options: ["Excellent", "Good", "Fair", "Needs work"],
+  },
+  {
+    key: "guest_preference_note",
+    object: "reservation",
+    type: "text",
+    isPublic: true,
+  },
+];
 
 describe("parseMutationPlan", () => {
   it("parses a valid plan", () => {
@@ -125,6 +149,162 @@ describe("scoreListingNicknames", () => {
   });
 });
 
+describe("scoreCustomFields", () => {
+  it("keeps exact catalog matches and reports dirtyCount 0", () => {
+    const result = scoreCustomFields(
+      [
+        { fieldId: "1", key: "lockbox_code", object: "listing", type: "text" },
+        {
+          fieldId: "2",
+          key: "unit_condition",
+          object: "listing",
+          type: "enum",
+          options: ["Excellent", "Good", "Fair", "Needs work"],
+        },
+        {
+          fieldId: "3",
+          key: "guest_preference_note",
+          object: "reservation",
+          type: "text",
+        },
+      ],
+      DEMO_CATALOG,
+    );
+    expect(result.dirtyCount).toBe(0);
+    expect(result.keep).toBe(3);
+    expect(result.toDelete).toHaveLength(0);
+    expect(result.toCreate).toHaveLength(0);
+  });
+
+  it("deletes extras not in catalog", () => {
+    const result = scoreCustomFields(
+      [
+        { fieldId: "1", key: "lockbox_code", object: "listing", type: "text" },
+        { fieldId: "x", key: "junk_field", object: "listing", type: "text" },
+        {
+          fieldId: "2",
+          key: "unit_condition",
+          object: "listing",
+          type: "enum",
+          options: ["Excellent", "Good", "Fair", "Needs work"],
+        },
+        {
+          fieldId: "3",
+          key: "guest_preference_note",
+          object: "reservation",
+          type: "text",
+        },
+      ],
+      DEMO_CATALOG,
+    );
+    expect(result.toDelete).toHaveLength(1);
+    expect(result.toDelete[0]).toMatchObject({
+      fieldId: "x",
+      reason: "not_in_catalog",
+    });
+    expect(result.dirtyCount).toBe(1);
+  });
+
+  it("creates missing catalog fields", () => {
+    const result = scoreCustomFields(
+      [{ fieldId: "1", key: "lockbox_code", object: "listing", type: "text" }],
+      DEMO_CATALOG,
+    );
+    expect(result.toCreate.map((c) => c.key).sort()).toEqual([
+      "guest_preference_note",
+      "unit_condition",
+    ]);
+    expect(result.dirtyCount).toBe(2);
+  });
+
+  it("plans enum options fix without delete", () => {
+    const result = scoreCustomFields(
+      [
+        { fieldId: "1", key: "lockbox_code", object: "listing", type: "text" },
+        {
+          fieldId: "2",
+          key: "unit_condition",
+          object: "listing",
+          type: "enum",
+          options: ["Good", "Bad"],
+        },
+        {
+          fieldId: "3",
+          key: "guest_preference_note",
+          object: "reservation",
+          type: "text",
+        },
+      ],
+      DEMO_CATALOG,
+    );
+    expect(result.toFixOptions).toHaveLength(1);
+    expect(result.toFixOptions[0]).toMatchObject({
+      fieldId: "2",
+      reason: "options_drift",
+      options: ["Excellent", "Good", "Fair", "Needs work"],
+    });
+    expect(result.toDelete).toHaveLength(0);
+    expect(result.dirtyCount).toBe(1);
+  });
+
+  it("deletes wrong type so create can replace", () => {
+    const result = scoreCustomFields(
+      [
+        { fieldId: "1", key: "lockbox_code", object: "listing", type: "number" },
+        {
+          fieldId: "2",
+          key: "unit_condition",
+          object: "listing",
+          type: "enum",
+          options: ["Excellent", "Good", "Fair", "Needs work"],
+        },
+        {
+          fieldId: "3",
+          key: "guest_preference_note",
+          object: "reservation",
+          type: "text",
+        },
+      ],
+      DEMO_CATALOG,
+    );
+    expect(result.toDelete).toEqual([
+      expect.objectContaining({ fieldId: "1", reason: "wrong_type" }),
+    ]);
+    expect(result.toCreate).toEqual([
+      expect.objectContaining({ key: "lockbox_code", type: "text" }),
+    ]);
+    expect(result.dirtyCount).toBe(2);
+  });
+
+  it("deletes duplicate keys after first match", () => {
+    const result = scoreCustomFields(
+      [
+        { fieldId: "1a", key: "lockbox_code", object: "listing", type: "text" },
+        { fieldId: "1b", key: "lockbox_code", object: "listing", type: "text" },
+        {
+          fieldId: "2",
+          key: "unit_condition",
+          object: "listing",
+          type: "enum",
+          options: ["Excellent", "Good", "Fair", "Needs work"],
+        },
+        {
+          fieldId: "3",
+          key: "guest_preference_note",
+          object: "reservation",
+          type: "text",
+        },
+      ],
+      DEMO_CATALOG,
+    );
+    expect(result.toDelete).toEqual([
+      expect.objectContaining({ fieldId: "1b", reason: "duplicate_key" }),
+    ]);
+    expect(result.keep).toBe(3);
+    expect(result.dirtyCount).toBe(1);
+  });
+});
+
 describe("buildAuditReport", () => {
   it("splits thresholdsMet and thresholdsNotMet with explicit numbers", () => {
     const report = buildAuditReport({
@@ -132,6 +312,7 @@ describe("buildAuditReport", () => {
         guestsRenameCount: 10,
         listingNicknameRenameCount: 3,
         tasksDeleteCount: 100,
+        customFieldsDirtyCount: 1,
       },
       guests: { renameCount: 42, totalGuests: 200, sample: [] },
       listingNicknames: { renameCount: 1, totalListings: 50, sample: [] },
@@ -142,10 +323,16 @@ describe("buildAuditReport", () => {
         keepPerTitle: 50,
         exported: 300,
       },
+      customFields: {
+        dirtyCount: 0,
+        liveCount: 10,
+        catalogCount: 10,
+        keep: 10,
+      },
     });
 
     expect(report.propose).toEqual(["guests"]);
-    expect(report.skip).toEqual(["listingNicknames", "tasks"]);
+    expect(report.skip).toEqual(["listingNicknames", "tasks", "customFields"]);
     expect(report.thresholdsMet).toHaveLength(1);
     expect(report.thresholdsMet[0].summary).toBe(
       "guests renameCount 42 >= 10 (MET — propose)",
@@ -153,6 +340,36 @@ describe("buildAuditReport", () => {
     expect(report.thresholdsNotMet.map((t) => t.summary)).toEqual([
       "listingNicknames renameCount 1 < 3 (NOT MET — skip)",
       "tasks deleteCount 40 < 100 (NOT MET — skip)",
+      "customFields dirtyCount 0 < 1 (NOT MET — skip)",
     ]);
+  });
+
+  it("proposes customFields when dirtyCount meets threshold", () => {
+    const report = buildAuditReport({
+      thresholds: {
+        guestsRenameCount: 10,
+        listingNicknameRenameCount: 3,
+        tasksDeleteCount: 100,
+        customFieldsDirtyCount: 1,
+      },
+      guests: { renameCount: 0, totalGuests: 10 },
+      listingNicknames: { renameCount: 0, totalListings: 10 },
+      tasks: {
+        deleteCount: 0,
+        keep: 0,
+        keepableCandidates: 0,
+        keepPerTitle: 50,
+        exported: 0,
+      },
+      customFields: {
+        dirtyCount: 5,
+        liveCount: 12,
+        catalogCount: 10,
+        keep: 7,
+        sample: [{ op: "delete_custom_field" }],
+      },
+    });
+    expect(report.propose).toEqual(["customFields"]);
+    expect(report.areas.customFields.verdict).toBe("MET");
   });
 });
