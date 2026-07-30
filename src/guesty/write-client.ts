@@ -61,6 +61,11 @@ export class GuestyWriteClient {
     return this.put(`/listings/${listingId}`, { nickname });
   }
 
+  /** Hard-delete a listing (Open API DELETE /listings/{id}). */
+  async deleteListing(listingId: string): Promise<Json> {
+    return this.delete(`/listings/${listingId}`);
+  }
+
   /** Cancel a task instance (does not stop recurring series generators). */
   async cancelTask(taskId: string): Promise<Json> {
     return this.put(`/tasks-open-api/${taskId}`, { status: "canceled" });
@@ -189,6 +194,11 @@ export class GuestyWriteClient {
     if (res.status === 204) return {};
     const text = await res.text();
     if (!text) return {};
-    return JSON.parse(text) as Json;
+    try {
+      return JSON.parse(text) as Json;
+    } catch {
+      // Guesty DELETE /listings/{id} returns plain text "ok"
+      return { ok: true, raw: text };
+    }
   }
 }

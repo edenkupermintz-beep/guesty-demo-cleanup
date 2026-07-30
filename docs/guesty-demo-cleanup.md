@@ -56,7 +56,7 @@ Load `.cursor/skills/guesty-demo-cleanup/zero-state.json` before proposing mutat
 
 | Area | Default behavior |
 |------|------------------|
-| **Listing nicknames** | `PUT /listings/{id}` with `{ nickname }` only — format `GueStay - {City}` / `GueStay - {City} - {UnitType}` |
+| **Listing nicknames** | `PUT /listings/{id}` with `{ nickname }` only — format `GueStay - {City}` / `GueStay - {City} - {UnitType}`. Preserve case-sensitive conforming nicknames; only rename missing/junk/wrong-city/wrong-casing |
 | **Guests** | Names only — `PUT /guests/{id}` with `firstName` + `lastName`. Do **not** clear notes, emails, phones, or reservation links unless explicitly asked |
 | **Reservations** | Skip allowlisted codes/IDs; skip terminal statuses; skip channel-managed when `skipChannelManaged` is true (list as manual). Otherwise `closed`/`declined` for inquiries, `canceled` for confirmed demo junk |
 | **Inbox** | Report only — archive manually in Guesty UI |
@@ -70,7 +70,9 @@ Load `.cursor/skills/guesty-demo-cleanup/zero-state.json` before proposing mutat
 | Shared multi-unit cities (e.g. Atlanta) | Prefer shared base `GueStay - {City}`; API uniqueness may force `GueStay - Atlanta 2` |
 
 Guesty requires **unique nicknames** account-wide. Exact duplicates are rejected.
-Scripts append ` 2`, ` 3`, … when needed and save `before` nicknames in the plan for revert.
+Already-valid `GueStay - {City}[ - {UnitType}][ N]` nicknames (exact casing, correct city)
+are preserved — the planner does not reshuffle them. Scripts append ` 2`, ` 3`, … when
+assigning dirty nicknames and save `before` values in the plan for revert.
 
 ---
 

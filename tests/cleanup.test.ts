@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 import { buildAuditReport, gateThreshold } from "../src/cleanup/audit.js";
 import { scoreCustomFields } from "../src/cleanup/score-custom-fields.js";
 import { scoreGuests } from "../src/cleanup/score-guests.js";
-import { scoreListingNicknames } from "../src/cleanup/score-listing-nicknames.js";
+import {
+  buildNicknamePlan,
+  scoreListingNicknames,
+} from "../src/cleanup/score-listing-nicknames.js";
 import { scoreTasks } from "../src/cleanup/score-tasks.js";
 import { parseMutationPlan } from "../src/cleanup/apply.js";
 import type { CustomFieldCatalogEntry } from "../src/cleanup/zero-state.js";
@@ -146,6 +149,119 @@ describe("scoreListingNicknames", () => {
     ]);
     expect(result.renameCount).toBe(1);
     expect(result.sample[0]?.after).toBe("GueStay - London");
+  });
+
+  it("preserves conforming Atlanta shared nicknames without renumbering", () => {
+    const { plan } = buildNicknamePlan([
+      {
+        _id: "a1",
+        title: "Flat A",
+        nickname: "GueStay - Atlanta 4",
+        address: { city: "Atlanta" },
+      },
+      {
+        _id: "a2",
+        title: "Flat B",
+        nickname: "GueStay - Atlanta 7",
+        address: { city: "Atlanta" },
+      },
+    ]);
+    expect(plan).toHaveLength(0);
+  });
+
+  it("preserves conforming multi-city unit-type nicknames without reshuffle", () => {
+    const { plan } = buildNicknamePlan([
+      {
+        _id: "s1",
+        title: "House near the bay",
+        nickname: "GueStay - Sydney - House",
+        address: { city: "Sydney" },
+      },
+      {
+        _id: "s2",
+        title: "Loft downtown",
+        nickname: "GueStay - Sydney - Loft",
+        address: { city: "Sydney" },
+      },
+    ]);
+    expect(plan).toHaveLength(0);
+  });
+
+  it("preserves Sealy Apartment numbers without swapping", () => {
+    const { plan } = buildNicknamePlan([
+      {
+        _id: "se1",
+        title: "Apt",
+        nickname: "GueStay - Sealy - Apartment 2",
+        address: { city: "Sealy" },
+      },
+      {
+        _id: "se2",
+        title: "Apt 2",
+        nickname: "GueStay - Sealy - Apartment 3",
+        address: { city: "Sealy" },
+      },
+    ]);
+    expect(plan).toHaveLength(0);
+  });
+
+  it("renames junk, wrong-city, and wrong-casing nicknames", () => {
+    const { plan } = buildNicknamePlan([
+      {
+        _id: "j1",
+        title: "Loft",
+        nickname: "Old Nick",
+        address: { city: "London" },
+      },
+      {
+        _id: "j2",
+        title: "Flat",
+        nickname: "GueStay - Paris",
+        address: { city: "London" },
+      },
+      {
+        _id: "j3",
+        title: "Studio",
+        nickname: "GueStay - atlanta",
+        address: { city: "Atlanta" },
+      },
+      {
+        _id: "j4",
+        title: "Condo",
+        nickname: "guestay - Atlanta",
+        address: { city: "Atlanta" },
+      },
+    ]);
+    expect(plan.map((p) => p.id).sort()).toEqual(["j1", "j2", "j3", "j4"]);
+    expect(plan.find((p) => p.id === "j1")?.after).toBe("GueStay - London - Loft");
+    expect(plan.find((p) => p.id === "j2")?.after).toBe(
+      "GueStay - London - Apartment",
+    );
+    const atlanta = plan
+      .filter((p) => p.id === "j3" || p.id === "j4")
+      .map((p) => p.after)
+      .sort();
+    expect(atlanta).toEqual(["GueStay - Atlanta", "GueStay - Atlanta 2"]);
+  });
+
+  it("avoids colliding with preserved reserved nicknames when assigning dirty ones", () => {
+    const { plan } = buildNicknamePlan([
+      {
+        _id: "keep",
+        title: "Kept",
+        nickname: "GueStay - Atlanta",
+        address: { city: "Atlanta" },
+      },
+      {
+        _id: "dirty",
+        title: "Dirty",
+        nickname: "Junk",
+        address: { city: "Atlanta" },
+      },
+    ]);
+    expect(plan).toHaveLength(1);
+    expect(plan[0]?.id).toBe("dirty");
+    expect(plan[0]?.after).toBe("GueStay - Atlanta 2");
   });
 });
 

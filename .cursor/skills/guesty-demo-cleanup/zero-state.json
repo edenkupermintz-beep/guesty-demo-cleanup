@@ -32,7 +32,7 @@
       "Bungalow"
     ],
     "maxPreferredPerBaseNickname": 3,
-    "note": "Guesty enforces unique nicknames; script appends ' 2', ' 3', … when needed. Titles are marketing copy — do not change unless user asks."
+    "note": "Preserve case-sensitive conforming nicknames: GueStay - {City}[ - {UnitType}][ N]. Only rename missing/junk/wrong-city/wrong-casing. Guesty enforces unique nicknames; script appends ' 2', ' 3', … when assigning dirty ones. Titles are marketing copy — do not change unless user asks."
   },
   "tasks": {
     "preferredAction": "delete",

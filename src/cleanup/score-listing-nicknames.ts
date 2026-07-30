@@ -66,6 +66,28 @@ function titleCaseCity(city: string): string {
     .join(" ");
 }
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/**
+ * Case-sensitive: GueStay - {City}[ - {UnitType}][ N]
+ * City must match titleCaseCity(city); UnitType must be an exact catalog entry.
+ */
+export function isConformingGueStayNickname(
+  nickname: string | null | undefined,
+  city: string,
+  unitTypes: string[] = [...DEFAULT_UNIT_TYPES],
+): boolean {
+  if (!nickname) return false;
+  const c = titleCaseCity(city);
+  if (!c) return false;
+  const unitAlt = unitTypes.map(escapeRegExp).join("|");
+  const unitPart = unitAlt ? `(?: - (${unitAlt}))?` : "";
+  const re = new RegExp(`^GueStay - ${escapeRegExp(c)}${unitPart}(?: \\d+)?$`);
+  return re.test(nickname);
+}
+
 function inferUnitType(l: ListingScoreRow): string | null {
   const blob =
     `${l.title || ""} ${l.nickname || ""} ${l.propertyType || ""} ${l.roomType || ""}`.toLowerCase();
@@ -109,6 +131,65 @@ function uniquify(base: string, used: Set<string>): string {
     if (!used.has(cand) && cand.length <= 80) return cand;
   }
   throw new Error(`Could not uniquify nickname: ${base}`);
+}
+
+function assignSharedNickname(
+  l: ListingScoreRow,
+  cityKey: string,
+  reserved: Set<string>,
+  sharedMultiUnit: boolean,
+): NicknamePlanRow {
+  const base = fitNickname(cityKey);
+  const after = uniquify(base, reserved);
+  reserved.add(after);
+  return {
+    id: l._id,
+    title: l.title ?? null,
+    city: cityKey,
+    before: l.nickname ?? null,
+    after,
+    unitType: null,
+    sharedMultiUnit,
+  };
+}
+
+function assignMultiNickname(
+  l: ListingScoreRow,
+  cityKey: string,
+  reserved: Set<string>,
+  unitTypes: string[],
+  maxPerBase: number,
+  typeCounts: Map<string, number>,
+  typeIdx: { value: number },
+): NicknamePlanRow {
+  let unitType = inferUnitType(l);
+  if (unitType && (typeCounts.get(unitType) || 0) >= maxPerBase) {
+    unitType = null;
+  }
+  if (!unitType) {
+    for (let n = 0; n < unitTypes.length * 3; n++) {
+      const cand = unitTypes[typeIdx.value % unitTypes.length];
+      typeIdx.value++;
+      if ((typeCounts.get(cand) || 0) < maxPerBase) {
+        unitType = cand;
+        break;
+      }
+    }
+  }
+  unitType = unitType || "Apartment";
+  typeCounts.set(unitType, (typeCounts.get(unitType) || 0) + 1);
+  const base = fitNickname(cityKey, unitType);
+  const after = uniquify(base, reserved);
+  reserved.add(after);
+  return {
+    id: l._id,
+    title: l.title ?? null,
+    city: cityKey,
+    before: l.nickname ?? null,
+    after,
+    unitType,
+    sharedMultiUnit: false,
+  };
 }
 
 export function buildNicknamePlan(
@@ -157,57 +238,53 @@ export function buildNicknamePlan(
     const shareSame =
       sharedCities.has(cityKey.toLowerCase()) || rows.length === 1;
 
+    // Pass 1: preserve case-sensitive conforming GueStay nicknames.
+    const dirty: typeof rows = [];
+    for (const row of rows) {
+      const nick = row.l.nickname ?? "";
+      if (isConformingGueStayNickname(nick, cityKey, unitTypes)) {
+        reserved.add(nick);
+      } else {
+        dirty.push(row);
+      }
+    }
+
+    // Pass 2: assign new nicknames only for non-conforming listings.
     if (shareSame) {
-      for (const { l } of rows) {
-        const base = fitNickname(cityKey);
-        const after = uniquify(base, reserved);
-        reserved.add(after);
-        if ((l.nickname || "") === after) continue;
-        plan.push({
-          id: l._id,
-          title: l.title ?? null,
-          city: cityKey,
-          before: l.nickname ?? null,
-          after,
-          unitType: null,
-          sharedMultiUnit: sharedCities.has(cityKey.toLowerCase()),
-        });
+      const sharedMultiUnit = sharedCities.has(cityKey.toLowerCase());
+      for (const { l } of dirty) {
+        plan.push(assignSharedNickname(l, cityKey, reserved, sharedMultiUnit));
       }
       continue;
     }
 
     const typeCounts = new Map<string, number>();
-    let typeIdx = 0;
+    // Count unit types already reserved by conforming nicknames in this city.
     for (const row of rows) {
-      let unitType = inferUnitType(row.l);
-      if (unitType && (typeCounts.get(unitType) || 0) >= maxPerBase) {
-        unitType = null;
-      }
-      if (!unitType) {
-        for (let n = 0; n < unitTypes.length * 3; n++) {
-          const cand = unitTypes[typeIdx % unitTypes.length];
-          typeIdx++;
-          if ((typeCounts.get(cand) || 0) < maxPerBase) {
-            unitType = cand;
-            break;
-          }
-        }
-      }
-      unitType = unitType || "Apartment";
-      typeCounts.set(unitType, (typeCounts.get(unitType) || 0) + 1);
-      const base = fitNickname(cityKey, unitType);
-      const after = uniquify(base, reserved);
-      reserved.add(after);
-      if ((row.l.nickname || "") === after) continue;
-      plan.push({
-        id: row.l._id,
-        title: row.l.title ?? null,
-        city: cityKey,
-        before: row.l.nickname ?? null,
-        after,
-        unitType,
-        sharedMultiUnit: false,
-      });
+      const nick = row.l.nickname ?? "";
+      if (!isConformingGueStayNickname(nick, cityKey, unitTypes)) continue;
+      const m = nick.match(
+        new RegExp(
+          `^GueStay - ${escapeRegExp(cityKey)}(?: - (${unitTypes.map(escapeRegExp).join("|")}))?(?: \\d+)?$`,
+        ),
+      );
+      const ut = m?.[1];
+      if (ut) typeCounts.set(ut, (typeCounts.get(ut) || 0) + 1);
+    }
+
+    const typeIdx = { value: 0 };
+    for (const { l } of dirty) {
+      plan.push(
+        assignMultiNickname(
+          l,
+          cityKey,
+          reserved,
+          unitTypes,
+          maxPerBase,
+          typeCounts,
+          typeIdx,
+        ),
+      );
     }
   }
 

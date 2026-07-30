@@ -78,7 +78,9 @@ Load [zero-state.json](zero-state.json) before proposing mutations.
 - **Never touch:** listing **titles** (unless user explicitly asks), rate
   plans/strategies, owners, accounting categories, payment providers, account settings.
 - **Listing nicknames (allowed hygiene):** `PUT /listings/{id}` with `{ nickname }`
-  only — format `GueStay - {City}` / `GueStay - {City} - {UnitType}`. See below.
+  only — format `GueStay - {City}` / `GueStay - {City} - {UnitType}`. Preserve
+  case-sensitive conforming nicknames; only rename missing/junk/wrong-city/wrong-casing.
+  See below.
 - **Guests (default hygiene):** **names only** — `PUT /guests/{id}` with
   `firstName` + `lastName`. Do **not** clear notes, emails, phones, or reservation
   links unless the user explicitly asks.
@@ -169,6 +171,8 @@ Only if audit `listingNicknames` is **MET**. Same city / unit-type logic used in
 | One listing in city | `GueStay - {City}` |
 | Multiple in city | `GueStay - {City} - {UnitType}` (Apartment, Condo, Loft, Penthouse, …) |
 | Shared multi-unit cities (e.g. Atlanta) | Prefer shared base `GueStay - {City}`; API uniqueness may force `GueStay - Atlanta 2` |
+
+Already-valid nicknames matching that pattern (case-sensitive, correct city) are left alone.
 
 ```bash
 npm run cleanup:rename-listing-nicknames           # dry-run → listing-nickname-plan.json

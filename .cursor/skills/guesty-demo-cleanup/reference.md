@@ -61,15 +61,19 @@ npm run cleanup:rename-listing-nicknames -- --apply
 ### Naming rules (`scripts/cleanup/rename-listing-nicknames.ts`)
 
 1. Resolve city from `address.city` (fallback heuristics on `address.full`).
-2. **Single** listing in that city → `GueStay - {City}`.
-3. **Multiple** listings → `GueStay - {City} - {UnitType}` where unit type is
-   inferred from title/nickname/`propertyType` when possible, else from a pool
-   (Apartment, Condo, Loft, Penthouse, Studio, Suite, Townhouse, Villa, …).
-   Prefer ≤ 3 listings aiming at the same base pattern before rotating types.
-4. **Shared multi-unit cities** (default: `Atlanta` in
-   `SHARED_NICKNAME_CITIES`) → all use base `GueStay - {City}` (no unit type).
-5. **Uniqueness:** Guesty rejects duplicate nicknames. Script appends ` 2`, ` 3`, …
-   when the base is taken (including Atlanta children after the first).
+2. **Preserve** case-sensitive conforming nicknames:
+   `GueStay - {City}[ - {UnitType}][ N]` for the listing’s city (exact casing).
+   Do not reshuffle numbers or unit types on already-valid names.
+3. **Dirty only** (missing / junk / wrong city / wrong casing): assign as follows:
+   - **Single** listing in that city → `GueStay - {City}`.
+   - **Multiple** listings → `GueStay - {City} - {UnitType}` where unit type is
+     inferred from title/nickname/`propertyType` when possible, else from a pool
+     (Apartment, Condo, Loft, Penthouse, Studio, Suite, Townhouse, Villa, …).
+     Prefer ≤ 3 listings aiming at the same base pattern before rotating types.
+   - **Shared multi-unit cities** (default: `Atlanta` in
+     `SHARED_NICKNAME_CITIES`) → bare `GueStay - {City}` (no unit type).
+4. **Uniqueness:** Guesty rejects duplicate nicknames. Script seeds reserved from
+   preserved nicknames, then appends ` 2`, ` 3`, … when assigning dirty ones.
 
 **Titles are never sent** in this script.
 
