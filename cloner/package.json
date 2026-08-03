@@ -1,0 +1,22 @@
+{
+  "name": "cloner",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Clone Guesty core account setup into a demo destination account",
+  "main": "cloner.js",
+  "scripts": {
+    "start": "node cloner.js",
+    "clone": "node cloner.js",
+    "init": "node initializer.js",
+    "teardown": "node teardown.js"
+  },
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "axios": "^1.18.0",
+    "dotenv": "^16.5.0",
+    "otplib": "^13.4.1",
+    "playwright": "^1.61.0"
+  }
+}

@@ -1,13 +1,15 @@
 # Guesty demo account tools
 
-This repo has **two separate tools** for Guesty demo accounts:
+This repo has **separate tools** for Guesty demo accounts:
 
 | Tool | Purpose |
 |------|---------|
 | **Apprentice** (cleanup) | Remove operational clutter from a demo account |
 | **Faker** (`faker/`) | Seed fake confirmed reservations into a demo account |
+| **Cloner** (`cloner/`) | Clone Core account setup into a Demo destination account |
 
-They do not share a workflow. Cleanup does not call faker, and faker does not run cleanup.
+They do not share a workflow. Cleanup, faker, and cloner each use their own
+credentials/env files and do not call each other.
 
 ## NOTE: THE CLEANUP SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN IT ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
 
@@ -85,6 +87,7 @@ Defaults:
 - `docs/guesty-demo-cleanup.md` — shareable cleanup runbook
 - `AGENTS.md` — **Apprentice** agent instructions for this repo
 - `faker/` — **separate** reservation seeder (not part of cleanup)
+- `cloner/` — **separate** Core → Demo account cloner (not part of cleanup)
 
 ## Scripts (cleanup)
 
@@ -107,6 +110,10 @@ Defaults:
 | `npm run next-reservation` | Intake smoke: listing → next reservation |
 | `npm run faker:install` | Install deps for the faker seeder (`faker/`) |
 | `npm run faker` | Seed fake reservations (uses `faker/.env` only) |
+| `npm run cloner:install` | Install deps for the cloner toolkit (`cloner/`) |
+| `npm run cloner` | Clone Core → Demo (uses `cloner/.env` only) |
+| `npm run cloner:init` | Playwright helper to open/create a demo account |
+| `npm run cloner:teardown` | Destructive purge of the Demo account |
 | `npm test` / `npm run typecheck` | Unit tests / TypeScript check |
 
 ---
@@ -123,4 +130,24 @@ Setup and usage: [`faker/readme.md`](faker/readme.md). Quick start from repo roo
 npm run faker:install
 cp faker/.env.example faker/.env   # set that account's GUESTY_CLIENT_ID + GUESTY_CLIENT_SECRET
 npm run faker
+```
+
+---
+
+## Cloner (demo account set up)
+
+**Not part of Apprentice / cleanup.** Standalone toolkit under [`cloner/`](cloner/)
+that clones listing/setup data from a Core (source) account into a Demo
+(destination) account, with optional Playwright account init and a destructive
+teardown.
+
+Credentials are **separate**: always `cloner/.env` with `CORE_*` and `DEMO_*`
+client id/secret (pinned by path, independent of cwd).
+
+Setup and usage: [`cloner/readme.md`](cloner/readme.md). Quick start from repo root:
+
+```bash
+npm run cloner:install
+cp cloner/.env.example cloner/.env   # set CORE_* and DEMO_* credentials
+npm run cloner
 ```
