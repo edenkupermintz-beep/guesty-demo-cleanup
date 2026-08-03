@@ -112,7 +112,6 @@ Defaults:
 | `npm run faker` | Seed fake reservations (uses `faker/.env` only) |
 | `npm run cloner:install` | Install deps for the cloner toolkit (`cloner/`) |
 | `npm run cloner` | Clone Core → Demo (uses `cloner/.env` only) |
-| `npm run cloner:init` | Playwright helper to open/create a demo account |
 | `npm test` / `npm run typecheck` | Unit tests / TypeScript check |
 
 ---
@@ -135,9 +134,9 @@ npm run faker
 
 ## Cloner (demo account set up)
 
-**Not part of Apprentice / cleanup.** Standalone toolkit under [`cloner/`](cloner/)
+**Not part of Apprentice / cleanup.** Standalone script under [`cloner/`](cloner/)
 that clones listing/setup data from a Core (source) account into a Demo
-(destination) account, with an optional Playwright account init helper.
+(destination) account.
 
 Credentials are **separate**: always `cloner/.env` with `CORE_*` and `DEMO_*`
 client id/secret (pinned by path, independent of cwd).

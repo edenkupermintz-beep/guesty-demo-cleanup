@@ -1,14 +1,14 @@
 {
-  "name": "cloner",
-  "private": true,
+  "name": "demo_set_up",
   "version": "1.0.0",
-  "description": "Clone Guesty core account setup into a demo destination account",
+  "description": "",
   "main": "cloner.js",
   "scripts": {
     "start": "node cloner.js",
-    "clone": "node cloner.js",
-    "init": "node initializer.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {

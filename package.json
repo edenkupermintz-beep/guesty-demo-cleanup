@@ -11,7 +11,6 @@
     "faker:install": "npm --prefix faker install",
     "cloner": "npm --prefix cloner start",
     "cloner:install": "npm --prefix cloner install",
-    "cloner:init": "npm --prefix cloner run init",
     "cleanup:apply": "tsx scripts/cleanup/apply-plan.ts",
     "cleanup:audit": "tsx scripts/cleanup/audit.ts",
     "cleanup:export-guests": "tsx scripts/cleanup/export-guests.ts",
