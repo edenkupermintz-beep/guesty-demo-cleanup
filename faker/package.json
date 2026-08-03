@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@faker-js/faker": "^10.4.0",
+    "axios": "^1.18.0"
+  }
+}
