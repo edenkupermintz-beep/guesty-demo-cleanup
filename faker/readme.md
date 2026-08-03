@@ -1,26 +1,27 @@
 # Reservation Faker Data Generator
 
-Script to add new reservations to an existing demo account.
+Standalone script to seed fake confirmed reservations into a Guesty demo account.
 
-## 🚀 Step-by-Step Usage Instructions
+**Separate from Apprentice / cleanup.** Credentials live in `faker/.env` only — never the repo-root `.env`. The script always loads that file, no matter which directory you run it from.
 
-### Step 1: Install Dependencies
+## Setup
 
-Ensure you have Node.js installed, open your terminal in this folder, and run:
+From the repo root (no need to `cd faker`):
 
-npm install
+```bash
+npm run faker:install
+cp faker/.env.example faker/.env
+# put this account's GUESTY_CLIENT_ID + GUESTY_CLIENT_SECRET in faker/.env
+```
 
-### Step 2: Configure Environment Variables
+> **Security:** Never commit `faker/.env`. It is gitignored.
 
-Create a file named .env in the root directory of your project to safely store your target API credentials:
+## Run
 
-GUESTY_CLIENT_ID=your_client_id_here
-GUESTY_CLIENT_SECRET=your_client_secret_here
+From the repo root:
 
-> ⚠️ **Security Note:** Never commit your .env file to version control. Ensure .env is listed inside your .gitignore file.
+```bash
+npm run faker
+```
 
-### Step 3: Run the Reservation Faker
-
-Execute the generation script to begin streaming fake reservation traffic into your demo environment:
-
-node faker.js
+Or equivalently: `npm start` inside `faker/`, or `node faker/faker.js` from anywhere — all use `faker/.env`.

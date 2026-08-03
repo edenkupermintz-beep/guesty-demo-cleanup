@@ -1,16 +1,18 @@
-require('dotenv').config(); // Load environment variables from .env file
+const path = require('path');
+// Always load faker/.env (never the repo-root Apprentice .env), regardless of cwd.
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 const axios = require('axios');
 const { faker } = require('@faker-js/faker');
 
-// Pull credentials strictly from environment variables
+// Pull credentials strictly from faker/.env
 const CLIENT_ID = process.env.GUESTY_CLIENT_ID;
 const CLIENT_SECRET = process.env.GUESTY_CLIENT_SECRET;
 const BASE_URL = 'https://open-api.guesty.com/v1';
 
 // Validate credentials before making API requests
 if (!CLIENT_ID || !CLIENT_SECRET) {
-    console.error("❌ Missing GUESTY_CLIENT_ID or GUESTY_CLIENT_SECRET in environment variables.");
+    console.error("❌ Missing GUESTY_CLIENT_ID or GUESTY_CLIENT_SECRET in faker/.env.");
     process.exit(1);
 }
 

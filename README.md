@@ -1,8 +1,21 @@
-# Apprentice clean up agent
+# Guesty demo account tools
 
-## NOTE: THIS SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN THIS SKILL ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
+This repo has **two separate tools** for Guesty demo accounts:
 
-**Apprentice** is the Cursor agent for this repo. It cleans the Guesty Sales demo account (or any account you point it at via OAuth credentials) using the Guesty MCP and the Open API.
+| Tool | Purpose |
+|------|---------|
+| **Apprentice** (cleanup) | Remove operational clutter from a demo account |
+| **Faker** (`faker/`) | Seed fake confirmed reservations into a demo account |
+
+They do not share a workflow. Cleanup does not call faker, and faker does not run cleanup.
+
+## NOTE: THE CLEANUP SKILL IS PUBLISHED FOR INTERNAL USE ONLY. CONTACT SALES ENGINEERING TO RUN IT ON THE SALES DEMO ACCOUNT. EVERY OTHER GUESTY ACCOUNT IS FAIR GAME - RUN AT YOUR OWN RISK.
+
+---
+
+## Apprentice (cleanup)
+
+**Apprentice** is the Cursor agent for demo hygiene. It cleans the Guesty Sales demo account (or any account you point it at via OAuth credentials) using the Guesty MCP and the Open API.
 
 It cleans operational clutter: guest names, listing **nicknames**, excess **tasks**,
 **custom field** definitions, and junk reservations.
@@ -71,8 +84,9 @@ Defaults:
 - `.cursor/skills/guesty-demo-cleanup/` — Cursor skill + zero-state policy
 - `docs/guesty-demo-cleanup.md` — shareable cleanup runbook
 - `AGENTS.md` — **Apprentice** agent instructions for this repo
+- `faker/` — **separate** reservation seeder (not part of cleanup)
 
-## Scripts
+## Scripts (cleanup)
 
 | Command | Purpose |
 |---------|---------|
@@ -91,4 +105,22 @@ Defaults:
 | `npm run cleanup:apply -- --plan mutation-plan.json` | Dry-run reservation/sanitize plan |
 | `npm run cleanup:apply -- --plan mutation-plan.json --apply` | Apply plan writes |
 | `npm run next-reservation` | Intake smoke: listing → next reservation |
+| `npm run faker:install` | Install deps for the faker seeder (`faker/`) |
+| `npm run faker` | Seed fake reservations (uses `faker/.env` only) |
 | `npm test` / `npm run typecheck` | Unit tests / TypeScript check |
+
+---
+
+## Faker (reservation seeder)
+
+**Not part of Apprentice / cleanup.** Standalone script under [`faker/`](faker/) that creates fake confirmed reservations on active listings (random guests, stays in the next ~30 days).
+
+Credentials are **separate**: Apprentice uses the repo-root `.env`; faker always loads `faker/.env` (pinned by path, independent of cwd). Point each at a different Guesty account if you want.
+
+Setup and usage: [`faker/readme.md`](faker/readme.md). Quick start from repo root:
+
+```bash
+npm run faker:install
+cp faker/.env.example faker/.env   # set that account's GUESTY_CLIENT_ID + GUESTY_CLIENT_SECRET
+npm run faker
+```
