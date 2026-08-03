@@ -11,7 +11,6 @@ no matter which directory you run them from.
 |--------|---------|
 | `cloner.js` | Clone properties + seed staggered reservations from Core → Demo |
 | `initializer.js` | Playwright helper to spin up a new demo account in Chrome |
-| `teardown.js` | Destructive purge of the Demo account (confirm carefully) |
 
 ## Setup
 
@@ -33,10 +32,9 @@ From the repo root:
 ```bash
 npm run cloner              # clone Core → Demo
 npm run cloner:init         # optional: create/open a new demo account (Chrome)
-npm run cloner:teardown     # optional: purge Demo account (destructive)
 ```
 
-Or equivalently inside `cloner/`: `npm start` / `npm run init` / `npm run teardown`.
+Or equivalently inside `cloner/`: `npm start` / `npm run init`.
 
 ## Optional knobs
 

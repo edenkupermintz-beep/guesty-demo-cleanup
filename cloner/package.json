@@ -7,8 +7,7 @@
   "scripts": {
     "start": "node cloner.js",
     "clone": "node cloner.js",
-    "init": "node initializer.js",
-    "teardown": "node teardown.js"
+    "init": "node initializer.js"
   },
   "license": "ISC",
   "type": "commonjs",
